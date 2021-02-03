@@ -2,14 +2,14 @@
 
 A Flutter plugin for iOS and Android get/set/listen system volume.
 
-## Getting Started
-
-dependencies: volume_controller: ^1.0.0
-
 ## Functions
 
 - getVolume: get current volume from system
-    > await VolumeController.getVolume()
+    > VolumeController.getVolume()
+- maxVolume: set the volume to max
+    > VolumeController.maxVolume()
+- muteVolume: mute the volume
+    > VolumeController.muteVolume()
 - setVolume: input a double number to set system volume. The range is [0, 1]
     > await VolumeController.setVolume(double volume)
 - volumeListener: listen system volume
@@ -18,17 +18,19 @@ dependencies: volume_controller: ^1.0.0
 ## Usage
 
 ```dart
+
 class _MyAppState extends State<MyApp> {
-  TextEditingController _textController = TextEditingController();
-  double _volume = 0;
+  double _volumeListenerValue = 0;
   double _getVolume = 0;
+  double _setVolumeValue = 0;
 
   @override
   void initState() {
     super.initState();
     VolumeController.volumeListener.listen((volume) {
-      setState(() => _volume = volume);
+      setState(() => _volumeListenerValue = volume);
     });
+    VolumeController.getVolume().then((volume) => _setVolumeValue = volume);
   }
 
   @override
@@ -40,20 +42,21 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Column(
           children: [
-            Text('Current volume: $_volume'),
+            Text('Current volume: $_volumeListenerValue'),
             Row(
               children: [
-                Flexible(child: TextField(controller: _textController)),
-                RaisedButton(
-                  color: Colors.blue,
-                  onPressed: () {
-                    if (_textController.text != '') {
-                      VolumeController.setVolume(
-                          double.parse(_textController.text));
+                Text('Set Volume:'),
+                Flexible(
+                  child: Slider(
+                    min: 0,
+                    max: 1,
+                    onChanged: (double value) {
+                      _setVolumeValue = value;
+                      VolumeController.setVolume(_setVolumeValue);
                       setState(() {});
-                    }
-                  },
-                  child: Text('Set Volume By Value'),
+                    },
+                    value: _setVolumeValue,
+                  ),
                 ),
               ],
             ),
@@ -61,8 +64,7 @@ class _MyAppState extends State<MyApp> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text('Volume is: $_getVolume'),
-                RaisedButton(
-                  color: Colors.blue,
+                TextButton(
                   onPressed: () async {
                     _getVolume = await VolumeController.getVolume();
                     setState(() {});
@@ -70,6 +72,14 @@ class _MyAppState extends State<MyApp> {
                   child: Text('Get Volume'),
                 ),
               ],
+            ),
+            TextButton(
+              onPressed: () => VolumeController.muteVolume(),
+              child: Text('Mute Volume'),
+            ),
+            TextButton(
+              onPressed: () => VolumeController.maxVolume(),
+              child: Text('Max Volume'),
             ),
           ],
         ),

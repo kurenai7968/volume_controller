@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_plugin/flutter_plugin.dart';
+import 'package:volume_controller/volume_controller.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,10 +18,10 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    FlutterPlugin.volumeListener.listen((volume) {
+    VolumeController.volumeListener.listen((volume) {
       setState(() => _volumeListenerValue = volume);
     });
-    FlutterPlugin.getVolume().then((volume) => _setVolumeValue = volume);
+    VolumeController.getVolume().then((volume) => _setVolumeValue = volume);
   }
 
   @override
@@ -36,14 +36,14 @@ class _MyAppState extends State<MyApp> {
             Text('Current volume: $_volumeListenerValue'),
             Row(
               children: [
-                Text('Set Value: '),
+                Text('Set Volume:'),
                 Flexible(
                   child: Slider(
                     min: 0,
                     max: 1,
                     onChanged: (double value) {
                       _setVolumeValue = value;
-                      FlutterPlugin.setVolume(_setVolumeValue);
+                      VolumeController.setVolume(_setVolumeValue);
                       setState(() {});
                     },
                     value: _setVolumeValue,
@@ -57,7 +57,7 @@ class _MyAppState extends State<MyApp> {
                 Text('Volume is: $_getVolume'),
                 TextButton(
                   onPressed: () async {
-                    _getVolume = await FlutterPlugin.getVolume();
+                    _getVolume = await VolumeController.getVolume();
                     setState(() {});
                   },
                   child: Text('Get Volume'),
@@ -65,11 +65,11 @@ class _MyAppState extends State<MyApp> {
               ],
             ),
             TextButton(
-              onPressed: () => FlutterPlugin.muteVolume(),
+              onPressed: () => VolumeController.muteVolume(),
               child: Text('Mute Volume'),
             ),
             TextButton(
-              onPressed: () => FlutterPlugin.maxVolume(),
+              onPressed: () => VolumeController.maxVolume(),
               child: Text('Max Volume'),
             ),
           ],
