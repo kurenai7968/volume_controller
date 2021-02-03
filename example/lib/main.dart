@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'package:volume_controller/volume_controller.dart';
+import 'package:flutter_plugin/flutter_plugin.dart';
 
 void main() {
   runApp(MyApp());
@@ -12,16 +11,17 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  TextEditingController _textController = TextEditingController();
-  double _volume = 0;
+  double _volumeListenerValue = 0;
   double _getVolume = 0;
+  double _setVolumeValue = 0;
 
   @override
   void initState() {
     super.initState();
-    VolumeController.volumeListener.listen((volume) {
-      setState(() => _volume = volume);
+    FlutterPlugin.volumeListener.listen((volume) {
+      setState(() => _volumeListenerValue = volume);
     });
+    FlutterPlugin.getVolume().then((volume) => _setVolumeValue = volume);
   }
 
   @override
@@ -33,20 +33,21 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Column(
           children: [
-            Text('Current volume: $_volume'),
+            Text('Current volume: $_volumeListenerValue'),
             Row(
               children: [
-                Flexible(child: TextField(controller: _textController)),
-                RaisedButton(
-                  color: Colors.blue,
-                  onPressed: () {
-                    if (_textController.text != '') {
-                      VolumeController.setVolume(
-                          double.parse(_textController.text));
+                Text('Set Value: '),
+                Flexible(
+                  child: Slider(
+                    min: 0,
+                    max: 1,
+                    onChanged: (double value) {
+                      _setVolumeValue = value;
+                      FlutterPlugin.setVolume(_setVolumeValue);
                       setState(() {});
-                    }
-                  },
-                  child: Text('Set Volume By Value'),
+                    },
+                    value: _setVolumeValue,
+                  ),
                 ),
               ],
             ),
@@ -54,15 +55,22 @@ class _MyAppState extends State<MyApp> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text('Volume is: $_getVolume'),
-                RaisedButton(
-                  color: Colors.blue,
+                TextButton(
                   onPressed: () async {
-                    _getVolume = await VolumeController.getVolume();
+                    _getVolume = await FlutterPlugin.getVolume();
                     setState(() {});
                   },
                   child: Text('Get Volume'),
                 ),
               ],
+            ),
+            TextButton(
+              onPressed: () => FlutterPlugin.muteVolume(),
+              child: Text('Mute Volume'),
+            ),
+            TextButton(
+              onPressed: () => FlutterPlugin.maxVolume(),
+              child: Text('Max Volume'),
             ),
           ],
         ),
