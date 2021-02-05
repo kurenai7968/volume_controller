@@ -8,3 +8,7 @@
 * Add maxVolume function and muteVolume function
 * Update README.md
 * Update example
+
+## 1.0.1+1
+
+* Update Comment
