@@ -13,7 +13,7 @@
 
 * Update Comment
 
-## 1.0.2
+## 2.0.0
 
 * Fix iOS Bug
 * Migrate to null safety 
