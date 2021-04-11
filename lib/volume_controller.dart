@@ -19,11 +19,7 @@ class VolumeController {
 
   /// This method set the system volume between 0.0 to 1.0.
   static void setVolume(double volume) {
-    if (volume != null) {
-      _methodChannel.invokeMethod('setVolume', {"volume": volume});
-    } else {
-      print("Volume value cannot be null");
-    }
+    _methodChannel.invokeMethod('setVolume', {"volume": volume});
   }
 
   /// This method set the system volume to max.
@@ -38,6 +34,8 @@ class VolumeController {
 
   /// This method get the current system volume.
   static Future<double> getVolume() async {
-    return await _methodChannel.invokeMethod('getVolume');
+    return await _methodChannel
+        .invokeMethod<double>('getVolume')
+        .then<double>((double? value) => value ?? 0);
   }
 }

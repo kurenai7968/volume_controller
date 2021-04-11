@@ -12,3 +12,8 @@
 ## 1.0.1+1
 
 * Update Comment
+
+## 1.0.2
+
+* Fix iOS Bug
+* Migrate to null safety 

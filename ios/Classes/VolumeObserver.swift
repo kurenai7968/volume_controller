@@ -12,35 +12,27 @@ import Flutter
 import UIKit
 
 
-public class VolumeObserver {
-    private let audioSession = AVAudioSession.sharedInstance()
-    
+public class VolumeObserver {   
     public func getVolume() -> Float {
+        let audioSession = AVAudioSession.sharedInstance()
         return audioSession.outputVolume
     }
     
     public func setVolume(volume:Float) {
-        let volumeView = MPVolumeView()
-        let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
-
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.01) {
-            slider?.value = volume
-        }
+        MPVolumeView.setVolume(volume)
     }
 }
 
 extension MPVolumeView {
-    static func setVolume(_ volume: Float) {
-        let volumeView = MPVolumeView()
-        let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
-        
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.01) {
-            slider?.value = volume
-        }
+  static func setVolume(_ volume: Float) {
+    let volumeView = MPVolumeView()
+    let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
+
+    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.01) {
+      slider?.value = volume
     }
+  }
 }
-
-
 
 public class VolumeListener: NSObject, FlutterStreamHandler {
     private let audioSession = AVAudioSession.sharedInstance()

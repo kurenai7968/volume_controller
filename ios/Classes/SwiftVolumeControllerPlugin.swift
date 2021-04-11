@@ -2,7 +2,6 @@ import Flutter
 import UIKit
 import AVFoundation
 
-
 public class SwiftVolumeControllerPlugin: NSObject, FlutterPlugin{
     
     private static let CHANNEL = "com.kurenai7968.volume_controller."
@@ -27,8 +26,8 @@ public class SwiftVolumeControllerPlugin: NSObject, FlutterPlugin{
         }
         if (call.method == "setVolume") {
             let arg = call.arguments as? [String:Any]
-            let volume = arg?["volume"] as? Float
-            volumeObserver.setVolume(volume: volume!)
+            let volume = arg?["volume"] as? Double
+            volumeObserver.setVolume(volume: Float(volume!))
         }
     }
 }
