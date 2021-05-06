@@ -88,6 +88,7 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
         notification.removeObserver(self,
                                     name: UIApplication.didBecomeActiveNotification,
                                     object: nil)
+        isObserving = false
     }
 
     
