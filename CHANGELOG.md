@@ -16,4 +16,8 @@
 ## 2.0.0
 
 * Fix iOS Bug
-* Migrate to null safety 
+* Migrate to null safety
+
+## 2.0.1
+
+* Fix iOS Bug
