@@ -1,23 +1,37 @@
 # volume_controller
 
-A Flutter plugin for iOS and Android get/set/listen system volume.
+A Flutter plugin for iOS and Android control system volume. \
+\
+**The show/hide system UI only support Android now**
+
+## Variables
+
+- bool showSystemUI: show or hide volume system UI \
+  The default value is true.
+    > VolumeController().showSystemUI = true
 
 ## Functions
 
 - getVolume: get current volume from system
-    > VolumeController.getVolume()
-- maxVolume: set the volume to max
-    > VolumeController.maxVolume()
-- muteVolume: mute the volume
-    > VolumeController.muteVolume()
+    > VolumeController().getVolume()
 - setVolume: input a double number to set system volume. The range is [0, 1]
-    > await VolumeController.setVolume(double volume)
-- volumeListener: listen system volume
-    > VolumeController.volumeListener.listen((volume) { // TODO });
+    > await VolumeController().setVolume(double volume, {bool? showSystemUI})
+- maxVolume: set the volume to max
+    > VolumeController().maxVolume({bool? showSystemUI})
+- muteVolume: mute the volume
+    > VolumeController().muteVolume({bool? showSystemUI})
+- listener: listen system volume
+    > VolumeController().listener((volume) { // TODO });
+- removeListener: cancel listen system volume
+    > VolumeController().removeListener()
 
 ## Usage
 
 ```dart
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
 
 class _MyAppState extends State<MyApp> {
   double _volumeListenerValue = 0;
@@ -27,10 +41,18 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    VolumeController.volumeListener.listen((volume) {
+    // Listen to system volume change
+    VolumeController().listener((volume) {
       setState(() => _volumeListenerValue = volume);
     });
-    VolumeController.getVolume().then((volume) => _setVolumeValue = volume);
+
+    VolumeController().getVolume().then((volume) => _setVolumeValue = volume);
+  }
+
+  @override
+  void dispose() {
+    VolumeController().removeListener();
+    super.dispose();
   }
 
   @override
@@ -52,7 +74,7 @@ class _MyAppState extends State<MyApp> {
                     max: 1,
                     onChanged: (double value) {
                       _setVolumeValue = value;
-                      VolumeController.setVolume(_setVolumeValue);
+                      VolumeController().setVolume(_setVolumeValue);
                       setState(() {});
                     },
                     value: _setVolumeValue,
@@ -66,7 +88,7 @@ class _MyAppState extends State<MyApp> {
                 Text('Volume is: $_getVolume'),
                 TextButton(
                   onPressed: () async {
-                    _getVolume = await VolumeController.getVolume();
+                    _getVolume = await VolumeController().getVolume();
                     setState(() {});
                   },
                   child: Text('Get Volume'),
@@ -74,12 +96,22 @@ class _MyAppState extends State<MyApp> {
               ],
             ),
             TextButton(
-              onPressed: () => VolumeController.muteVolume(),
+              onPressed: () => VolumeController().muteVolume(),
               child: Text('Mute Volume'),
             ),
             TextButton(
-              onPressed: () => VolumeController.maxVolume(),
+              onPressed: () => VolumeController().maxVolume(),
               child: Text('Max Volume'),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Show system UI:${VolumeController().showSystemUI}'),
+                TextButton(
+                  onPressed: () => setState(() => VolumeController().showSystemUI = !VolumeController().showSystemUI),
+                  child: Text('Show/Hide UI'),
+                )
+              ],
             ),
           ],
         ),

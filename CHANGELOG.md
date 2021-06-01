@@ -21,3 +21,9 @@
 ## 2.0.1
 
 * Fix iOS Bug
+
+## 2.0.2
+
+* VolumeController class change to singleton
+* Add "removeListener" function
+* Add show/hide volume system UI (only for android now)

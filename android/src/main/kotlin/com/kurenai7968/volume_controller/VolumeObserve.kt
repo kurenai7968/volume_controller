@@ -6,6 +6,7 @@ import android.content.Context.AUDIO_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
+import android.media.AudioManager.FLAG_SHOW_UI
 import io.flutter.plugin.common.EventChannel
 import kotlin.math.round
 
@@ -13,7 +14,7 @@ import kotlin.math.round
 class VolumeObserver(private val context:Context){
     private var audioManager: AudioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
 
-    fun setVolumeByPercentage(volume:Double) {
+    fun setVolumeByPercentage(volume:Double, showSystemUI:Boolean) {
         var volumePercentage:Double = volume
         var _volume:Int = 0
         if (volume > 1) {
@@ -25,7 +26,7 @@ class VolumeObserver(private val context:Context){
         var maxVolume:Int = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         _volume = (round(volumePercentage * maxVolume)).toInt()
 
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, _volume, 0)
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, _volume, if (showSystemUI) FLAG_SHOW_UI else 0)
     }
 
     fun getVolume():Double {

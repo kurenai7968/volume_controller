@@ -18,20 +18,15 @@ public class VolumeObserver {
         return audioSession.outputVolume
     }
     
-    public func setVolume(volume:Float) {
-        MPVolumeView.setVolume(volume)
-    }
-}
+    public func setVolume(volume:Float, showSystemUI: Bool) {
+        let volumeView = MPVolumeView()
 
-extension MPVolumeView {
-  static func setVolume(_ volume: Float) {
-    let volumeView = MPVolumeView()
-    let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
+        let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
 
-    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.01) {
-      slider?.value = volume
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.01) {
+            slider?.value = volume
+        }
     }
-  }
 }
 
 public class VolumeListener: NSObject, FlutterStreamHandler {

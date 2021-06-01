@@ -27,7 +27,9 @@ public class SwiftVolumeControllerPlugin: NSObject, FlutterPlugin{
         if (call.method == "setVolume") {
             let arg = call.arguments as? [String:Any]
             let volume = arg?["volume"] as? Double
-            volumeObserver.setVolume(volume: Float(volume!))
+            let showSystemUI = arg?["showSystemUI"] as? Bool
+
+            volumeObserver.setVolume(volume: Float(volume!), showSystemUI: showSystemUI!)
         }
     }
 }

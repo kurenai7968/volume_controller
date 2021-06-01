@@ -35,8 +35,9 @@ class VolumeControllerPlugin: FlutterPlugin, MethodCallHandler {
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
     when (call.method) {
       "setVolume" -> {
-        var volume:Double? = call.argument("volume")
-        volumeObserver.setVolumeByPercentage(volume!!)
+        var volume:Double = call.argument("volume")!!
+        var showSystemUI:Boolean = call.argument("showSystemUI")!!
+        volumeObserver.setVolumeByPercentage(volume, showSystemUI)
       }
       "getVolume" -> result.success(volumeObserver.getVolume())
     }

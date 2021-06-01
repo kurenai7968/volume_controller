@@ -18,10 +18,18 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    VolumeController.volumeListener.listen((volume) {
+    // Listen to system volume change
+    VolumeController().listener((volume) {
       setState(() => _volumeListenerValue = volume);
     });
-    VolumeController.getVolume().then((volume) => _setVolumeValue = volume);
+
+    VolumeController().getVolume().then((volume) => _setVolumeValue = volume);
+  }
+
+  @override
+  void dispose() {
+    VolumeController().removeListener();
+    super.dispose();
   }
 
   @override
@@ -43,7 +51,7 @@ class _MyAppState extends State<MyApp> {
                     max: 1,
                     onChanged: (double value) {
                       _setVolumeValue = value;
-                      VolumeController.setVolume(_setVolumeValue);
+                      VolumeController().setVolume(_setVolumeValue);
                       setState(() {});
                     },
                     value: _setVolumeValue,
@@ -57,7 +65,7 @@ class _MyAppState extends State<MyApp> {
                 Text('Volume is: $_getVolume'),
                 TextButton(
                   onPressed: () async {
-                    _getVolume = await VolumeController.getVolume();
+                    _getVolume = await VolumeController().getVolume();
                     setState(() {});
                   },
                   child: Text('Get Volume'),
@@ -65,12 +73,23 @@ class _MyAppState extends State<MyApp> {
               ],
             ),
             TextButton(
-              onPressed: () => VolumeController.muteVolume(),
+              onPressed: () => VolumeController().muteVolume(),
               child: Text('Mute Volume'),
             ),
             TextButton(
-              onPressed: () => VolumeController.maxVolume(),
+              onPressed: () => VolumeController().maxVolume(),
               child: Text('Max Volume'),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Show system UI:${VolumeController().showSystemUI}'),
+                TextButton(
+                  onPressed: () => setState(() => VolumeController()
+                      .showSystemUI = !VolumeController().showSystemUI),
+                  child: Text('Show/Hide UI'),
+                )
+              ],
             ),
           ],
         ),
