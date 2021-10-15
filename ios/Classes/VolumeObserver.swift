@@ -13,9 +13,14 @@ import UIKit
 
 
 public class VolumeObserver {   
-    public func getVolume() -> Float {
+    public func getVolume() -> Float? {
         let audioSession = AVAudioSession.sharedInstance()
-        return audioSession.outputVolume
+        do {
+            try audioSession.setActive(true)
+            return audioSession.outputVolume
+        } catch let _ {
+            return nil
+        }
     }
     
     public func setVolume(volume:Float, showSystemUI: Bool) {

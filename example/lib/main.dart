@@ -50,9 +50,10 @@ class _MyAppState extends State<MyApp> {
                     min: 0,
                     max: 1,
                     onChanged: (double value) {
-                      _setVolumeValue = value;
-                      VolumeController().setVolume(_setVolumeValue);
-                      setState(() {});
+                      setState(() {
+                        _setVolumeValue = value;
+                        VolumeController().setVolume(_setVolumeValue);
+                      });
                     },
                     value: _setVolumeValue,
                   ),
