@@ -27,3 +27,7 @@
 * VolumeController class change to singleton
 * Add "removeListener" function
 * Add show/hide volume system UI (only for android now)
+
+## 2.0.3
+
+* Andorid: Migrate maven repository from jcenter to mavenCentral
