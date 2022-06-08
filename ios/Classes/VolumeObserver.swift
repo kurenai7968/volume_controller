@@ -12,24 +12,22 @@ import Flutter
 import UIKit
 
 
-public class VolumeObserver {   
+public class VolumeObserver {
+    let volumeView = MPVolumeView()
+    
     public func getVolume() -> Float? {
         let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setActive(true)
             return audioSession.outputVolume
-        } catch let _ {
+        } catch {
             return nil
         }
     }
     
-    public func setVolume(volume:Float, showSystemUI: Bool) {
-        let volumeView = MPVolumeView()
-
-        let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
-
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.01) {
-            slider?.value = volume
+    public func setVolume(volume:Float, showSystemUI: Bool) -> Void {
+        if let view = volumeView.subviews.first as? UISlider {
+            view.setValue(volume, animated: false)
         }
     }
 }
