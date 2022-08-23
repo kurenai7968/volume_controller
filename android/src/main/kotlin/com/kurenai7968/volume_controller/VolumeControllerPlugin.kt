@@ -38,6 +38,7 @@ class VolumeControllerPlugin: FlutterPlugin, MethodCallHandler {
         var volume:Double = call.argument("volume")!!
         var showSystemUI:Boolean = call.argument("showSystemUI")!!
         volumeObserver.setVolumeByPercentage(volume, showSystemUI)
+        result.success(null)
       }
       "getVolume" -> result.success(volumeObserver.getVolume())
     }
