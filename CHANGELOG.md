@@ -31,3 +31,7 @@
 ## 2.0.3
 
 * Andorid: Migrate maven repository from jcenter to mavenCentral
+
+## 2.0.4
+
+* Fix iOS Audio mute after resume from background
