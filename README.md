@@ -1,8 +1,6 @@
 # volume_controller
 
-A Flutter plugin for iOS and Android control system volume. \
-\
-**The show/hide system UI only support Android now**
+A Flutter plugin for iOS and Android control system volume.
 
 ## Variables
 

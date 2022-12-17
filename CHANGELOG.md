@@ -39,3 +39,7 @@
 ## 2.0.5
 
 * Android: Update Versions of Kotlin, Gradle, Gradle Android Pluign
+
+## 2.0.6
+
+* iOS can hide the system UI by showSystemUI
