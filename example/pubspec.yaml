@@ -1,4 +1,5 @@
 name: volume_controller_example
+version: 0.0.1+1
 description: Demonstrates how to use the volume_controller plugin.
 
 # The following line prevents the package from being accidentally published to

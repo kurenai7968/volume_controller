@@ -12,9 +12,9 @@ import Flutter
 import UIKit
 
 
-public class VolumeObserver {   
+public class VolumeObserver {
     public func getVolume() -> Float? {
-        let audioSession = AVAudioSession.sharedInstance()
+        let audioSession: AVAudioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setActive(true)
             return audioSession.outputVolume
@@ -22,41 +22,47 @@ public class VolumeObserver {
             return nil
         }
     }
-    
+
     public func setVolume(volume:Float, showSystemUI: Bool) {
         let volumeView = MPVolumeView()
+        if(!showSystemUI){
+            volumeView.frame = CGRect(x: -1000, y: -1000, width: 1, height: 1)
+            volumeView.showsVolumeSlider = false
+            UIApplication.shared.delegate!.window!?.rootViewController!.view.addSubview(volumeView)
+        }
 
         let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
 
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.01) {
             slider?.value = volume
+            volumeView.removeFromSuperview()
         }
     }
 }
 
 public class VolumeListener: NSObject, FlutterStreamHandler {
-    private let audioSession = AVAudioSession.sharedInstance()
-    private let notification = NotificationCenter.default
+    private let audioSession: AVAudioSession = AVAudioSession.sharedInstance()
+    private let notification: NotificationCenter = NotificationCenter.default
     private var eventSink: FlutterEventSink?
     private var isObserving: Bool = false
-    private let volumeKey = "outputVolume"
+    private let volumeKey: String = "outputVolume"
 
 
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         eventSink = events
         registerVolumeObserver()
         eventSink?(audioSession.outputVolume)
-        
+
         return nil
     }
-    
+
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
         eventSink = nil
         removeVolumeObserver()
-        
+
         return nil
     }
-    
+
     private func registerVolumeObserver() {
         audioSessionObserver()
         notification.addObserver(
@@ -65,7 +71,7 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
             name: UIApplication.didBecomeActiveNotification,
             object: nil)
     }
-    
+
     @objc func audioSessionObserver(){
         do {
             try audioSession.setCategory(AVAudioSession.Category.playback)
@@ -78,10 +84,10 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
                 isObserving = true
             }
         } catch {
-            print("error")
+            print("Volume Controller Listener occurred error.")
         }
     }
-    
+
     private func removeVolumeObserver() {
         audioSession.removeObserver(self,
                                     forKeyPath: volumeKey)
@@ -91,12 +97,11 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
         isObserving = false
     }
 
-    
     override public func observeValue(forKeyPath keyPath: String?,
                                       of object: Any?,
                                       change: [NSKeyValueChangeKey: Any]?,
                                       context: UnsafeMutableRawPointer?) {
-        if keyPath == "outputVolume" {
+        if keyPath == volumeKey {
             eventSink?(audioSession.outputVolume)
         }
     }
