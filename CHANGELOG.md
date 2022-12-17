@@ -35,3 +35,7 @@
 ## 2.0.4
 
 * Fix iOS Audio mute after resume from background
+
+## 2.0.5
+
+* Android: Update Versions of Kotlin, Gradle, Gradle Android Pluign
