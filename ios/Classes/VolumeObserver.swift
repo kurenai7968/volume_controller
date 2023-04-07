@@ -11,24 +11,27 @@ import MediaPlayer
 import Flutter
 import UIKit
 
-
 public class VolumeObserver {
     public func getVolume() -> Float? {
         let audioSession: AVAudioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setActive(true)
-            return audioSession.outputVolume
-        } catch let _ {
-            return nil
+             try audioSession.setActive(true)
+             return audioSession.outputVolume
+        } catch {
+             return nil
         }
     }
 
-    public func setVolume(volume:Float, showSystemUI: Bool) {
+    public func setVolume(volume: Float, showSystemUI: Bool = false) {
         let volumeView = MPVolumeView()
-        if(!showSystemUI){
+        guard let window = UIApplication.shared.windows.first else {
+            assertionFailure("No window to add the volume slider to")
+            return
+        }
+        if !showSystemUI {
             volumeView.frame = CGRect(x: -1000, y: -1000, width: 1, height: 1)
             volumeView.showsVolumeSlider = false
-            UIApplication.shared.delegate!.window!?.rootViewController!.view.addSubview(volumeView)
+            window.rootViewController!.view.addSubview(volumeView)
         }
 
         let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
@@ -46,7 +49,6 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
     private var eventSink: FlutterEventSink?
     private var isObserving: Bool = false
     private let volumeKey: String = "outputVolume"
-
 
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         eventSink = events
@@ -74,7 +76,7 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
 
     @objc func audioSessionObserver(){
         do {
-            try audioSession.setCategory(AVAudioSession.Category.playback)
+            try audioSession.setCategory(.ambient, options: [.mixWithOthers])
             try audioSession.setActive(true)
             if !isObserving {
                 audioSession.addObserver(self,
