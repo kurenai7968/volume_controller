@@ -43,3 +43,7 @@
 ## 2.0.6
 
 * iOS can hide the system UI by showSystemUI
+
+## 2.0.7
+
+* Android: Update build.gradle
