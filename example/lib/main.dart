@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:volume_controller/volume_controller.dart';
+
+// ignore: implementation_imports
+import 'package:volume_controller/src/volume_controller.dart';
+import 'package:volume_controller/src/volume_slider.dart.dart';
+import 'package:volume_controller/volume_slider.dart';
 
 void main() {
   runApp(MyApp());
@@ -92,6 +96,15 @@ class _MyAppState extends State<MyApp> {
                 )
               ],
             ),
+            // An example of a new feature update
+            VolumeSlider(
+              display: Display.HORIZONTAL,
+              sliderActiveColor: Theme.of(context).primaryColor,
+              muteIconColor: Theme.of(context).colorScheme.background,
+              upVolumeIconColor: Theme.of(context).colorScheme.background,
+              visibleWidget: true,
+              sliderInActiveColor: Theme.of(context).dividerColor,
+            )
           ],
         ),
       ),
