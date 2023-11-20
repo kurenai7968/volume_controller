@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // ignore: implementation_imports
 import 'package:volume_controller/src/volume_controller.dart';
-import 'package:volume_controller/src/volume_slider.dart.dart';
+
 import 'package:volume_controller/volume_slider.dart';
 
 void main() {
