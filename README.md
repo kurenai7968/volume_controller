@@ -23,6 +23,41 @@ A Flutter plugin for iOS and Android control system volume.
 - removeListener: cancel listen system volume
     > VolumeController().removeListener()
 
+## Usage example of a new feature update
+
+![Screenshot_20231118-162138](https://github.com/Swan1993/volume_controller/assets/59397057/d9bfea7c-be7c-49e8-9852-14505b890966)
+
+
+![20231120_051156](https://github.com/Swan1993/volume_controller/assets/59397057/0ce5747c-5718-45c7-b009-6e45f8bb3e97)
+
+
+```dart
+VolumeSlider(
+                display: Display.HORIZONTAL,
+                sliderActiveColor: Theme.of(context).primaryColor,
+                muteIconColor: Theme.of(context).primaryColor,
+                upVolumeIconColor: Theme.of(context).primaryColor,
+                visibleWidget: true,
+                sliderInActiveColor: Theme.of(context).dividerColor,
+              ),
+              VolumeSlider(
+                display: Display.VERTICAL,
+                sliderActiveColor: Theme.of(context).primaryColor,
+                muteIconColor: Theme.of(context).primaryColor,
+                upVolumeIconColor: Theme.of(context).primaryColor,
+                visibleWidget: true,
+                sliderInActiveColor: Theme.of(context).dividerColor,
+              ),
+
+Container(
+              color: Colors.amber,
+              width: 100,
+              height: 250,
+              child: const DragDirectionVolume(
+                width: 100,
+                height: 250,
+              ),
+```
 ## Usage
 
 ```dart
