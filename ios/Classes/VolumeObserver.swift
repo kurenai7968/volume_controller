@@ -83,18 +83,20 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
                                          context: nil)
                 isObserving = true
             }
-        } catch {
-            print("Volume Controller Listener occurred error.")
+        } catch (let e) {
+            print("Volume Controller Listener occurred error. \(e)")
         }
     }
 
     private func removeVolumeObserver() {
-        audioSession.removeObserver(self,
-                                    forKeyPath: volumeKey)
-        notification.removeObserver(self,
+         notification.removeObserver(self,
                                     name: UIApplication.didBecomeActiveNotification,
                                     object: nil)
-        isObserving = false
+        if isObserving {
+            audioSession.removeObserver(self,
+                                        forKeyPath: volumeKey)
+            isObserving = false
+        }
     }
 
     override public func observeValue(forKeyPath keyPath: String?,
