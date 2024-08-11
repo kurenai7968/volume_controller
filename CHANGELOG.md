@@ -47,3 +47,7 @@
 ## 2.0.7
 
 * Android: Update build.gradle
+
+## 2.0.8
+
+* iOS: Update removeObserver may crash issue
