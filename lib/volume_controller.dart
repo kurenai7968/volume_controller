@@ -27,7 +27,8 @@ class VolumeController {
     return _instance!;
   }
 
-  /// This method listen to the system volume. The volume value will be generated when the volume was changed.
+  /// This method watches the system volume. A value will be generated each
+  /// time the volume was changed.
   Stream<double> watchVolume() {
     return _eventChannel.receiveBroadcastStream().map((d) => d as double);
   }
