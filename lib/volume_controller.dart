@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-/// Provide the iOS/Androd system volume.
+/// Provide the iOS/Android system volume.
 class VolumeController {
   /// Singleton class instance
   static VolumeController? _instance;
