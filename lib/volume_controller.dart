@@ -18,9 +18,6 @@ class VolumeController {
   /// This value is used to determine whether showing system UI
   bool showSystemUI = true;
 
-  /// Volume Listener Subscription
-  StreamSubscription<double>? _volumeListener;
-
   /// Singleton constructor
   VolumeController._();
 
@@ -31,17 +28,8 @@ class VolumeController {
   }
 
   /// This method listen to the system volume. The volume value will be generated when the volume was changed.
-  StreamSubscription<double> listener(Function(double)? onData) {
-    _volumeListener = _eventChannel
-        .receiveBroadcastStream()
-        .map((d) => d as double)
-        .listen(onData);
-    return _volumeListener!;
-  }
-
-  /// This method for canceling volume listener
-  void removeListener() {
-    _volumeListener?.cancel();
+  Stream<double> watchVolume() {
+    return _eventChannel.receiveBroadcastStream().map((d) => d as double);
   }
 
   /// This method get the current system volume.
