@@ -18,10 +18,8 @@ A Flutter plugin for iOS and Android control system volume.
     > VolumeController().maxVolume({bool? showSystemUI})
 - muteVolume: mute the volume
     > VolumeController().muteVolume({bool? showSystemUI})
-- listener: listen system volume
-    > VolumeController().listener((volume) { // TODO });
-- removeListener: cancel listen system volume
-    > VolumeController().removeListener()
+- watchVolume: watches system volume
+    > VolumeController().watchVolume()
 
 ## Usage
 
@@ -32,6 +30,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final StreamSubscription<double> _subscription; 
+  
   double _volumeListenerValue = 0;
   double _getVolume = 0;
   double _setVolumeValue = 0;
@@ -40,7 +40,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     // Listen to system volume change
-    VolumeController().listener((volume) {
+    _subscription = VolumeController().watchVolume().listen((volume) {
       setState(() => _volumeListenerValue = volume);
     });
 
@@ -49,7 +49,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
-    VolumeController().removeListener();
+    _subscription.cancel();
     super.dispose();
   }
 
