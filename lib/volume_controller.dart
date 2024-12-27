@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-/// Provide the iOS/Android system volume.
+/// Provide the iOS/Androd system volume.
 class VolumeController {
   /// Singleton class instance
   static VolumeController? _instance;
@@ -18,6 +18,9 @@ class VolumeController {
   /// This value is used to determine whether showing system UI
   bool showSystemUI = true;
 
+  /// Volume Listener Subscription
+  StreamSubscription<double>? _volumeListener;
+
   /// Singleton constructor
   VolumeController._();
 
@@ -27,10 +30,18 @@ class VolumeController {
     return _instance!;
   }
 
-  /// This method watches the system volume. A value will be generated each
-  /// time the volume was changed.
-  Stream<double> watchVolume() {
-    return _eventChannel.receiveBroadcastStream().map((d) => d as double);
+  /// This method listen to the system volume. The volume value will be generated when the volume was changed.
+  StreamSubscription<double> listener(Function(double)? onData) {
+    _volumeListener = _eventChannel
+        .receiveBroadcastStream()
+        .map((d) => d as double)
+        .listen(onData);
+    return _volumeListener!;
+  }
+
+  /// This method for canceling volume listener
+  void removeListener() {
+    _volumeListener?.cancel();
   }
 
   /// This method get the current system volume.
