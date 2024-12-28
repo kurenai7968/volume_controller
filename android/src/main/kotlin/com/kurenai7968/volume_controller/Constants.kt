@@ -16,3 +16,7 @@ object MethodArgument {
     const val VOLUME = "volume"
     const val SHOW_SYSTEM_UI = "showSystemUI"
 }
+
+object EventArgument {
+    const val FETCH_INITIAL_VOLUME = "fetchInitialVolume"
+}

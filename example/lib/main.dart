@@ -28,9 +28,9 @@ class _MyAppState extends State<MyApp> {
     _volumeController = VolumeController.instance;
 
     // Listen to system volume change
-    _subscription = _volumeController.listener((volume) {
+    _subscription = _volumeController.addListener((volume) {
       setState(() => _volumeValue = volume);
-    });
+    }, fetchInitialVolume: true);
 
     _volumeController.getVolume().then((volume) => _volumeValue = volume);
   }
@@ -58,9 +58,8 @@ class _MyAppState extends State<MyApp> {
                   child: Slider(
                     min: 0,
                     max: 1,
-                    onChanged: (double value) {
-                      _volumeController.setVolume(value);
-                    },
+                    onChanged: (double value) async =>
+                        await _volumeController.setVolume(value),
                     value: _volumeValue,
                   ),
                 ),
@@ -80,11 +79,11 @@ class _MyAppState extends State<MyApp> {
               ],
             ),
             TextButton(
-              onPressed: () => _volumeController.muteVolume(),
+              onPressed: () async => await _volumeController.muteVolume(),
               child: Text('Mute Volume'),
             ),
             TextButton(
-              onPressed: () => _volumeController.maxVolume(),
+              onPressed: () async => await _volumeController.maxVolume(),
               child: Text('Max Volume'),
             ),
             Row(

@@ -14,3 +14,7 @@ class MethodArgument {
   static const String volume = 'volume';
   static const String showSystemUI = 'showSystemUI';
 }
+
+class EventArgument {
+  static const String fetchInitialVolume = 'fetchInitialVolume';
+}

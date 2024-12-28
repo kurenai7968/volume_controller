@@ -10,7 +10,8 @@ public class VolumeController {
     do {
       try audioSession.setActive(true)
       return audioSession.outputVolume
-    } catch _ {
+    } catch {
+      print("Error activating audio session: \(error)")
       return nil
     }
   }
@@ -26,9 +27,12 @@ public class VolumeController {
       UIApplication.shared.keyWindow?.insertSubview(volumeView, at: 0)
     }
 
-    let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
+    guard let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider else {
+      return
+    }
+
     DispatchQueue.main.async {
-      slider?.value = Float(volume)
+      slider.value = volume
     }
   }
 }

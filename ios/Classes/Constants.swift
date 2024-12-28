@@ -12,3 +12,7 @@ struct MethodArgument {
   static let volume = "volume"
   static let showSystemUI = "showSystemUI"
 }
+
+struct EventArgument {
+  static let fetchInitialVolume = "fetchInitialVolume"
+}

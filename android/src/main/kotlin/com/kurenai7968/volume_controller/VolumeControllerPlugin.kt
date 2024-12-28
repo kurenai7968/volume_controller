@@ -9,15 +9,15 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
-class VolumeControllerPlugin: FlutterPlugin, MethodCallHandler {
+class VolumeControllerPlugin : FlutterPlugin, MethodCallHandler {
   private lateinit var volumeController: VolumeController
-  private lateinit var methodChannel:MethodChannel
+  private lateinit var methodChannel: MethodChannel
   private lateinit var eventChannel: EventChannel
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    var context = flutterPluginBinding.applicationContext
-    var audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    var volumeListener = VolumeListener(context, audioManager)
+    val context = flutterPluginBinding.applicationContext
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val volumeListener = VolumeListener(context, audioManager)
     volumeController = VolumeController(audioManager)
 
     // Register EventChannel
@@ -32,8 +32,8 @@ class VolumeControllerPlugin: FlutterPlugin, MethodCallHandler {
   override fun onMethodCall(call: MethodCall, result: Result) {
     when (call.method) {
       MethodName.SET_VOLUME -> {
-        var volume:Double = call.argument(MethodArgument.VOLUME)!!
-        var showSystemUI:Boolean = call.argument(MethodArgument.SHOW_SYSTEM_UI)!!
+        val volume: Double = call.argument(MethodArgument.VOLUME)!!
+        val showSystemUI: Boolean = call.argument(MethodArgument.SHOW_SYSTEM_UI)!!
         volumeController.setVolumeByPercentage(volume, showSystemUI)
       }
       MethodName.GET_VOLUME -> result.success(volumeController.getVolume())

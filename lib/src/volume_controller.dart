@@ -27,13 +27,18 @@ class VolumeController {
   VolumeController._();
 
   /// This method listen to the system volume. The volume value will be generated when the volume was changed.
-  StreamSubscription<double> listener(Function(double)? onData) {
+  StreamSubscription<double> addListener(
+    Function(double)? onData, {
+    bool fetchInitialVolume = true,
+  }) {
     if (_volumeListener != null) {
       removeListener();
     }
 
     _volumeListener = _eventChannel
-        .receiveBroadcastStream()
+        .receiveBroadcastStream({
+          EventArgument.fetchInitialVolume: fetchInitialVolume,
+        })
         .map((d) => d as double)
         .listen(onData);
 
@@ -54,7 +59,7 @@ class VolumeController {
   }
 
   /// This method set the system volume between 0.0 to 1.0.
-  void setVolume(double volume) {
+  Future<void> setVolume(double volume) async {
     _methodChannel.invokeMethod(MethodName.setVolume, {
       MethodArgument.volume: volume,
       MethodArgument.showSystemUI: showSystemUI,
@@ -62,7 +67,7 @@ class VolumeController {
   }
 
   /// This method set the system volume to max.
-  void maxVolume() {
+  Future<void> maxVolume() async {
     _methodChannel.invokeMethod(MethodName.setVolume, {
       MethodArgument.volume: 1.0,
       MethodArgument.showSystemUI: showSystemUI,
@@ -70,7 +75,7 @@ class VolumeController {
   }
 
   /// This method mute the system volume that mean the volume set to min.
-  void muteVolume() {
+  Future<void> muteVolume() async {
     _methodChannel.invokeMethod(MethodName.setVolume, {
       MethodArgument.volume: 0.0,
       MethodArgument.showSystemUI: showSystemUI,

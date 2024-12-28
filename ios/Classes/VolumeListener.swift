@@ -13,11 +13,15 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
     -> FlutterError?
   {
-    eventSink = events
+    let args = arguments as! [String: Any]
+    let fetchInitialVolume = args[EventArgument.fetchInitialVolume] as! Bool
+
+    self.eventSink = events
     registerVolumeObserver()
 
-    // sink the initial volume
-    eventSink?(audioSession.outputVolume)
+    if fetchInitialVolume {
+      events(audioSession.outputVolume)
+    }
 
     return nil
   }
@@ -31,7 +35,7 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
 
   private func registerVolumeObserver() {
     do {
-      try audioSession.setCategory(AVAudioSession.Category.playback)
+      try audioSession.setCategory(.playback)
       try audioSession.setActive(true)
       if !isObserving {
         audioSession.addObserver(
@@ -41,16 +45,14 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
           context: nil)
         isObserving = true
       }
-    } catch (let e) {
-      print("Volume Controller Listener occurred error. \(e)")
+    } catch {
+      print("Error setting up volume observer: \(error)")
     }
   }
 
   private func removeVolumeObserver() {
     if isObserving {
-      audioSession.removeObserver(
-        self,
-        forKeyPath: volumeKey)
+      audioSession.removeObserver(self, forKeyPath: volumeKey)
       isObserving = false
     }
   }
@@ -61,8 +63,9 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
     change: [NSKeyValueChangeKey: Any]?,
     context: UnsafeMutableRawPointer?
   ) {
-    if keyPath == volumeKey {
-      eventSink?(audioSession.outputVolume)
+    guard keyPath == volumeKey else {
+      return
     }
+    eventSink?(audioSession.outputVolume)
   }
 }

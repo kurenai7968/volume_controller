@@ -1,129 +1,52 @@
 # volume_controller
 
-A Flutter plugin for iOS and Android control system volume.
+This plugin allows you to control and listen to the system volume.
 
 ## Variables
 
-- bool showSystemUI: show or hide volume system UI \
-  The default value is true.
-    > VolumeController.instance.showSystemUI = true
+- `bool showSystemUI`: Show or hide the volume system UI. The default value is `true`.
+
+    ```dart
+    VolumeController.instance.showSystemUI = true;
+    ```
 
 ## Functions
 
-- getVolume: get current volume from system
-    > VolumeController.instance.getVolume()
-- setVolume: input a double number to set system volume. The range is [0, 1]
-    > await VolumeController.instance.setVolume(double volume)
-- maxVolume: set the volume to max
-    > VolumeController.instance.maxVolume()
-- muteVolume: mute the volume
-    > VolumeController.instance.muteVolume()
-- listener: listen system volume
-    > VolumeController.instance.listener((volume) { // do something });
-- removeListener: cancel listen system volume
-    > VolumeController.instance.removeListener()
+- `getVolume`: Get the current volume from the system.
 
-## Usage
+    ```dart
+    double volume = await VolumeController.instance.getVolume();
+    ```
 
-```dart
-class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+- `setVolume`: Set the system volume. The input is a double number in the range [0, 1].
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
+    ```dart
+    await VolumeController.instance.setVolume(double volume);
+    ```
 
-class _MyAppState extends State<MyApp> {
-  late final VolumeController _volumeController;
-  late final StreamSubscription<double> _subscription;
+- `maxVolume`: Set the volume to the maximum level.
 
-  double _currentVolume = 0;
-  double _volumeValue = 0;
+    ```dart
+    await VolumeController.instance.maxVolume();
+    ```
 
-  @override
-  void initState() {
-    super.initState();
+- `muteVolume`: Mute the system volume.
 
-    _volumeController = VolumeController.instance;
+    ```dart
+    await VolumeController.instance.muteVolume();
+    ```
 
-    // Listen to system volume change
-    _subscription = _volumeController.listener((volume) {
-      setState(() => _volumeValue = volume);
-    });
+- `addListener`: Add a listener to monitor system volume changes.
+  - `fetchInitialVolume`: This parameter is optional and is used to fetch the initial volume when the listener is added. The default value is `true`.
 
-    _volumeController.getVolume().then((volume) => _volumeValue = volume);
-  }
+  ```dart
+  VolumeController.instance.addListener((volume) {
+    // Do something with the volume
+  }, {fetchInitialVolume: true});
+  ```
 
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
+- `removeListener`: Remove the volume listener.
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Volume Plugin example app'),
-        ),
-        body: Column(
-          children: [
-            Text('Current volume: $_volumeValue'),
-            Row(
-              children: [
-                Text('Set Volume:'),
-                Flexible(
-                  child: Slider(
-                    min: 0,
-                    max: 1,
-                    onChanged: (double value) {
-                      _volumeController.setVolume(value);
-                    },
-                    value: _volumeValue,
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Volume is: $_currentVolume'),
-                TextButton(
-                  onPressed: () async {
-                    _currentVolume = await _volumeController.getVolume();
-                    setState(() {});
-                  },
-                  child: Text('Get Volume'),
-                ),
-              ],
-            ),
-            TextButton(
-              onPressed: () => _volumeController.muteVolume(),
-              child: Text('Mute Volume'),
-            ),
-            TextButton(
-              onPressed: () => _volumeController.maxVolume(),
-              child: Text('Max Volume'),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Show system UI:${_volumeController.showSystemUI}'),
-                TextButton(
-                  onPressed: () => setState(
-                    () => _volumeController.showSystemUI =
-                        !_volumeController.showSystemUI,
-                  ),
-                  child: Text('Show/Hide UI'),
-                )
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-```
+    ```dart
+    VolumeController.instance.removeListener();
+    ```
