@@ -57,3 +57,7 @@
 * Change the singleton to instance
 * Rename listener to addListener
 * iOS: Improve the performance of volume change listener
+
+## 3.0.1
+
+* iOS: Fix music stops when opening the app.
