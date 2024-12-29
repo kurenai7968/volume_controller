@@ -51,3 +51,9 @@
 ## 2.0.8
 
 * iOS: Update removeObserver may crash issue
+
+## 3.0.0
+
+* Change the singleton to instance
+* Rename listener to addListener
+* iOS: Improve the performance of volume change listener
