@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:volume_controller/volume_controller.dart';
 
@@ -6,29 +8,36 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  double _volumeListenerValue = 0;
-  double _getVolume = 0;
-  double _setVolumeValue = 0;
+  late final VolumeController _volumeController;
+  late final StreamSubscription<double> _subscription;
+
+  double _currentVolume = 0;
+  double _volumeValue = 0;
 
   @override
   void initState() {
     super.initState();
-    // Listen to system volume change
-    VolumeController().listener((volume) {
-      setState(() => _volumeListenerValue = volume);
-    });
 
-    VolumeController().getVolume().then((volume) => _setVolumeValue = volume);
+    _volumeController = VolumeController.instance;
+
+    // Listen to system volume change
+    _subscription = _volumeController.addListener((volume) {
+      setState(() => _volumeValue = volume);
+    }, fetchInitialVolume: true);
+
+    _volumeController.getVolume().then((volume) => _volumeValue = volume);
   }
 
   @override
   void dispose() {
-    VolumeController().removeListener();
+    _subscription.cancel();
     super.dispose();
   }
 
@@ -41,7 +50,7 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Column(
           children: [
-            Text('Current volume: $_volumeListenerValue'),
+            Text('Current volume: $_volumeValue'),
             Row(
               children: [
                 Text('Set Volume:'),
@@ -49,13 +58,9 @@ class _MyAppState extends State<MyApp> {
                   child: Slider(
                     min: 0,
                     max: 1,
-                    onChanged: (double value) {
-                      setState(() {
-                        _setVolumeValue = value;
-                        VolumeController().setVolume(_setVolumeValue);
-                      });
-                    },
-                    value: _setVolumeValue,
+                    onChanged: (double value) async =>
+                        await _volumeController.setVolume(value),
+                    value: _volumeValue,
                   ),
                 ),
               ],
@@ -63,10 +68,10 @@ class _MyAppState extends State<MyApp> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Volume is: $_getVolume'),
+                Text('Volume is: $_currentVolume'),
                 TextButton(
                   onPressed: () async {
-                    _getVolume = await VolumeController().getVolume();
+                    _currentVolume = await _volumeController.getVolume();
                     setState(() {});
                   },
                   child: Text('Get Volume'),
@@ -74,20 +79,22 @@ class _MyAppState extends State<MyApp> {
               ],
             ),
             TextButton(
-              onPressed: () => VolumeController().muteVolume(),
+              onPressed: () async => await _volumeController.muteVolume(),
               child: Text('Mute Volume'),
             ),
             TextButton(
-              onPressed: () => VolumeController().maxVolume(),
+              onPressed: () async => await _volumeController.maxVolume(),
               child: Text('Max Volume'),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Show system UI:${VolumeController().showSystemUI}'),
+                Text('Show system UI:${_volumeController.showSystemUI}'),
                 TextButton(
-                  onPressed: () => setState(() => VolumeController()
-                      .showSystemUI = !VolumeController().showSystemUI),
+                  onPressed: () => setState(
+                    () => _volumeController.showSystemUI =
+                        !_volumeController.showSystemUI,
+                  ),
                   child: Text('Show/Hide UI'),
                 )
               ],

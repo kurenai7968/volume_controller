@@ -1,7 +1,7 @@
 package com.kurenai7968.volume_controller
 
 import android.content.Context
-import androidx.annotation.NonNull
+import android.media.AudioManager
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
@@ -9,43 +9,40 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
-class VolumeControllerPlugin: FlutterPlugin, MethodCallHandler {
-  private val CHANNEL = "com.kurenai7968.volume_controller."
-  private lateinit var context:Context
-  private lateinit var volumeObserver: VolumeObserver
-  private lateinit var methodChannel:MethodChannel
-  private lateinit var volumeListenerEventChannel: EventChannel
-  private lateinit var volumeListenerStreamHandler: VolumeListener
+class VolumeControllerPlugin : FlutterPlugin, MethodCallHandler {
+  private lateinit var volumeController: VolumeController
+  private lateinit var methodChannel: MethodChannel
+  private lateinit var eventChannel: EventChannel
 
+  override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+    val context = flutterPluginBinding.applicationContext
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val volumeListener = VolumeListener(context, audioManager)
+    volumeController = VolumeController(audioManager)
 
+    // Register EventChannel
+    eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, ChannelName.EVENT_CHANNEL)
+    eventChannel.setStreamHandler(volumeListener)
 
-  override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    context = flutterPluginBinding.applicationContext
-    volumeObserver = VolumeObserver(context)
-
-    volumeListenerEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, CHANNEL + "volume_listener_event")
-    volumeListenerStreamHandler = VolumeListener(context)
-    volumeListenerEventChannel.setStreamHandler(volumeListenerStreamHandler)
-
-    methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, CHANNEL + "method")
+    // Register MethodChannel
+    methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, ChannelName.METHOD_CHANNEL)
     methodChannel.setMethodCallHandler(this)
   }
 
-
-  override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+  override fun onMethodCall(call: MethodCall, result: Result) {
     when (call.method) {
-      "setVolume" -> {
-        var volume:Double = call.argument("volume")!!
-        var showSystemUI:Boolean = call.argument("showSystemUI")!!
-        volumeObserver.setVolumeByPercentage(volume, showSystemUI)
+      MethodName.SET_VOLUME -> {
+        val volume: Double = call.argument(MethodArgument.VOLUME)!!
+        val showSystemUI: Boolean = call.argument(MethodArgument.SHOW_SYSTEM_UI)!!
+        volumeController.setVolumeByPercentage(volume, showSystemUI)
       }
-      "getVolume" -> result.success(volumeObserver.getVolume())
+      MethodName.GET_VOLUME -> result.success(volumeController.getVolume())
+      else -> result.notImplemented()
     }
   }
 
-  override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+  override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     methodChannel.setMethodCallHandler(null)
-    volumeListenerEventChannel.setStreamHandler(null)
+    eventChannel.setStreamHandler(null)
   }
-
 }
