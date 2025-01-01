@@ -65,20 +65,4 @@ class VolumeController {
       MethodArgument.showSystemUI: showSystemUI,
     });
   }
-
-  /// This method set the system volume to max.
-  Future<void> maxVolume() async {
-    _methodChannel.invokeMethod(MethodName.setVolume, {
-      MethodArgument.volume: 1.0,
-      MethodArgument.showSystemUI: showSystemUI,
-    });
-  }
-
-  /// This method mute the system volume that mean the volume set to min.
-  Future<void> muteVolume() async {
-    _methodChannel.invokeMethod(MethodName.setVolume, {
-      MethodArgument.volume: 0.0,
-      MethodArgument.showSystemUI: showSystemUI,
-    });
-  }
 }

@@ -24,18 +24,6 @@ This plugin allows you to control and listen to the system volume.
     await VolumeController.instance.setVolume(double volume);
     ```
 
-- `maxVolume`: Set the volume to the maximum level.
-
-    ```dart
-    await VolumeController.instance.maxVolume();
-    ```
-
-- `muteVolume`: Mute the system volume.
-
-    ```dart
-    await VolumeController.instance.muteVolume();
-    ```
-
 - `addListener`: Add a listener to monitor system volume changes.
   - `fetchInitialVolume`: This parameter is optional and is used to fetch the initial volume when the listener is added. The default value is `true`.
 

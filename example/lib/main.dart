@@ -78,14 +78,6 @@ class _MyAppState extends State<MyApp> {
                 ),
               ],
             ),
-            TextButton(
-              onPressed: () async => await _volumeController.muteVolume(),
-              child: Text('Mute Volume'),
-            ),
-            TextButton(
-              onPressed: () async => await _volumeController.maxVolume(),
-              child: Text('Max Volume'),
-            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

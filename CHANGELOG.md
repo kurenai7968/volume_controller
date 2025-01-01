@@ -61,3 +61,7 @@
 ## 3.0.1
 
 * iOS: Fix music stops when opening the app.
+
+## 3.0.2
+
+* Remove method `maxVolume` and `muteVolume`
