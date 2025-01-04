@@ -1,21 +1,15 @@
 PODS:
   - Flutter (1.0.0)
-  - volume_controller (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - volume_controller (from `.symlinks/plugins/volume_controller/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  volume_controller:
-    :path: ".symlinks/plugins/volume_controller/ios"
 
 SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  volume_controller: e168c0f0de495f0d2487d3be3a783395af38c4ce
 
 PODFILE CHECKSUM: c4c93c5f6502fe2754f48404d3594bf779584011
 
