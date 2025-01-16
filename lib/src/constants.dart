@@ -8,11 +8,14 @@ class ChannelName {
 class MethodName {
   static const String getVolume = 'getVolume';
   static const String setVolume = 'setVolume';
+  static const String isMuted = 'isMuted';
+  static const String setMute = 'setMute';
 }
 
 class MethodArgument {
   static const String volume = 'volume';
   static const String showSystemUI = 'showSystemUI';
+  static const String isMute = 'isMute';
 }
 
 class EventArgument {

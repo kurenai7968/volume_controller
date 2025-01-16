@@ -26,7 +26,10 @@ class VolumeController {
   /// Singleton constructor
   VolumeController._();
 
+  /// Adds a listener for volume changes.
+  ///
   /// This method listen to the system volume. The volume value will be generated when the volume was changed.
+  /// Optionally, the initial volume can be fetched and provided to the listener immediately.
   StreamSubscription<double> addListener(
     Function(double)? onData, {
     bool fetchInitialVolume = true,
@@ -45,23 +48,45 @@ class VolumeController {
     return _volumeListener!;
   }
 
-  /// This method for canceling volume listener
+  /// Cancels the volume listener.
+  ///
+  /// This method stops listening to volume changes and cleans up the listener.
   void removeListener() {
     _volumeListener?.cancel();
     _volumeListener = null;
   }
 
-  /// This method get the current system volume.
+  /// Gets the current system volume.
+  ///
+  /// This method retrieves the current volume level of the system.
   Future<double> getVolume() async {
     return await _methodChannel
         .invokeMethod<double>(MethodName.getVolume)
         .then<double>((double? value) => value ?? 0);
   }
 
-  /// This method set the system volume between 0.0 to 1.0.
+  /// Sets the system volume to the specified level.
+  ///
+  /// This method sets the system volume to the given level. The volume
+  /// value should be a double between 0.0 (minimum volume) and 1.0 (maximum volume).
   Future<void> setVolume(double volume) async {
     _methodChannel.invokeMethod(MethodName.setVolume, {
-      MethodArgument.volume: volume.clamp(0.0, 1.0),
+      MethodArgument.volume: volume,
+      MethodArgument.showSystemUI: showSystemUI,
+    });
+  }
+
+  /// Gets the current system volume mute status.
+  Future<bool> isMuted() async {
+    return await _methodChannel
+        .invokeMethod<bool>(MethodName.isMuted)
+        .then<bool>((value) => value!);
+  }
+
+  /// Sets the system volume mute status.
+  Future<void> setMute(bool mute) async {
+    _methodChannel.invokeMethod(MethodName.setMute, {
+      MethodArgument.isMute: mute,
       MethodArgument.showSystemUI: showSystemUI,
     });
   }

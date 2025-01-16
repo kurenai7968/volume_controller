@@ -20,7 +20,7 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
     registerVolumeObserver()
 
     if fetchInitialVolume {
-      events(audioSession.outputVolume)
+      events(audioSession.getVolume())
     }
 
     return nil
@@ -66,6 +66,6 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
     guard keyPath == volumeKey else {
       return
     }
-    eventSink?(audioSession.outputVolume)
+    eventSink?(audioSession.getVolume())
   }
 }

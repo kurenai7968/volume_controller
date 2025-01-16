@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:volume_controller/volume_controller.dart';
@@ -20,6 +21,7 @@ class _MyAppState extends State<MyApp> {
 
   double _currentVolume = 0;
   double _volumeValue = 0;
+  bool _isMuted = false;
 
   @override
   void initState() {
@@ -32,7 +34,9 @@ class _MyAppState extends State<MyApp> {
       setState(() => _volumeValue = volume);
     }, fetchInitialVolume: true);
 
-    _volumeController.getVolume().then((volume) => _volumeValue = volume);
+    _volumeController
+        .isMuted()
+        .then((isMuted) => setState(() => _isMuted = isMuted));
   }
 
   @override
@@ -91,9 +95,39 @@ class _MyAppState extends State<MyApp> {
                 )
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Is Muted:$_isMuted'),
+                TextButton(
+                  onPressed: () async {
+                    await updateMuteStatus(true);
+                  },
+                  child: Text('Mute'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await updateMuteStatus(false);
+                  },
+                  child: Text('Unmute'),
+                )
+              ],
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> updateMuteStatus(bool isMute) async {
+    await _volumeController.setMute(isMute);
+    if (Platform.isIOS) {
+      // On iOS, the system does not update the mute status immediately
+      // You need to wait for the system to update the mute status
+      await Future.delayed(Duration(milliseconds: 50));
+    }
+    _isMuted = await _volumeController.isMuted();
+
+    setState(() {});
   }
 }
