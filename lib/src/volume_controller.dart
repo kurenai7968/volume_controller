@@ -61,7 +61,7 @@ class VolumeController {
   /// This method set the system volume between 0.0 to 1.0.
   Future<void> setVolume(double volume) async {
     _methodChannel.invokeMethod(MethodName.setVolume, {
-      MethodArgument.volume: volume,
+      MethodArgument.volume: volume.clamp(0.0, 1.0),
       MethodArgument.showSystemUI: showSystemUI,
     });
   }
