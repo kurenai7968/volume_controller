@@ -65,3 +65,7 @@
 ## 3.0.2
 
 * Remove method `maxVolume` and `muteVolume`
+
+## 3.1.0
+
+* Support MacOS
