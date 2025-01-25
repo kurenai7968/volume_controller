@@ -43,3 +43,15 @@ For iOS, you need to test on a real device as the simulator does not support vol
     ```dart
     VolumeController.instance.removeListener();
     ```
+
+- `isMuted`: Check if the system volume is muted. On iOS and Android, this checks if the volume level is equal to 0.
+
+    ```dart
+    bool isMuted = await VolumeController.instance.isMuted();
+    ```
+
+- `setMute`: Mute or unmute the system volume. On iOS and Android, this sets the volume level to 0, and restores the previous volume level when unmuted.
+
+    ```dart
+    await VolumeController.instance.setMute(bool mute);
+    ```

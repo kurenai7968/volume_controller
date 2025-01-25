@@ -3,32 +3,32 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:volume_controller/src/constants.dart';
 
-/// Provide the iOS/Android system volume.
+/// Provides access to the system volume.
 class VolumeController {
-  /// Singleton class instance
+  /// Singleton instance of VolumeController
   static final VolumeController _instance = VolumeController._();
 
   /// Get the singleton instance of VolumeController
   static VolumeController get instance => _instance;
 
-  /// This method channel is used to communicate with iOS/Android method.
+  /// Method channel for communicating with platform methods.
   final MethodChannel _methodChannel = MethodChannel(ChannelName.methodChannel);
 
-  /// This event channel is used to communicate with iOS/Android event.
+  /// Event channel for communicating with platform events.
   final EventChannel _eventChannel = EventChannel(ChannelName.eventChannel);
 
-  /// Volume Listener Subscription
+  /// Volume listener subscription
   StreamSubscription<double>? _volumeListener;
 
-  /// This variable is used to store the system volume.
+  /// Whether to show the system UI when changing the volume.
   bool showSystemUI = true;
 
-  /// Singleton constructor
+  /// Private constructor for singleton
   VolumeController._();
 
   /// Adds a listener for volume changes.
   ///
-  /// This method listen to the system volume. The volume value will be generated when the volume was changed.
+  /// This method listens to the system volume. The volume value will be generated when the volume changes.
   /// Optionally, the initial volume can be fetched and provided to the listener immediately.
   StreamSubscription<double> addListener(
     Function(double)? onData, {
@@ -70,7 +70,7 @@ class VolumeController {
   /// This method sets the system volume to the given level. The volume
   /// value should be a double between 0.0 (minimum volume) and 1.0 (maximum volume).
   Future<void> setVolume(double volume) async {
-    _methodChannel.invokeMethod(MethodName.setVolume, {
+    await _methodChannel.invokeMethod(MethodName.setVolume, {
       MethodArgument.volume: volume,
       MethodArgument.showSystemUI: showSystemUI,
     });
@@ -85,7 +85,7 @@ class VolumeController {
 
   /// Sets the system volume mute status.
   Future<void> setMute(bool mute) async {
-    _methodChannel.invokeMethod(MethodName.setMute, {
+    await _methodChannel.invokeMethod(MethodName.setMute, {
       MethodArgument.isMute: mute,
       MethodArgument.showSystemUI: showSystemUI,
     });
