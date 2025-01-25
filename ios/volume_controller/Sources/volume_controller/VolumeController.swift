@@ -8,11 +8,14 @@ public class VolumeController {
   private var tempMuteVolume: Float?
 
   public func getVolume() -> Float {
-    audioSession.getVolume()
+    return audioSession.getVolume()
   }
 
   public func setVolume(volume: Float, showSystemUI: Bool) {
     let clampedVolume = volume.clamp(to: 0.0...1.0)
+    if clampedVolume != 0.0 {
+      tempMuteVolume = nil
+    }
 
     if showSystemUI {
       volumeView.frame = CGRect()
@@ -28,9 +31,7 @@ public class VolumeController {
       return
     }
 
-    DispatchQueue.main.async {
-      slider.value = clampedVolume
-    }
+    slider.value = clampedVolume
   }
 
   public func isMuted() -> Bool {
