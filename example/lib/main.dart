@@ -82,19 +82,20 @@ class _MyAppState extends State<MyApp> {
                 ),
               ],
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Show system UI:${_volumeController.showSystemUI}'),
-                TextButton(
-                  onPressed: () => setState(
-                    () => _volumeController.showSystemUI =
-                        !_volumeController.showSystemUI,
-                  ),
-                  child: Text('Show/Hide UI'),
-                )
-              ],
-            ),
+            if (Platform.isAndroid || Platform.isIOS)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Show system UI:${_volumeController.showSystemUI}'),
+                  TextButton(
+                    onPressed: () => setState(
+                      () => _volumeController.showSystemUI =
+                          !_volumeController.showSystemUI,
+                    ),
+                    child: Text('Show/Hide UI'),
+                  )
+                ],
+              ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
