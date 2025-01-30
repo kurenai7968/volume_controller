@@ -5,18 +5,18 @@ import UIKit
 public class VolumeController {
   private let audioSession: AVAudioSession = AVAudioSession.sharedInstance()
   private let volumeView: MPVolumeView = MPVolumeView()
+  private var tempMuteVolume: Float?
 
-  public func getVolume() -> Float? {
-    do {
-      try audioSession.setActive(true)
-      return audioSession.outputVolume
-    } catch {
-      print("Error activating audio session: \(error)")
-      return nil
-    }
+  public func getVolume() -> Float {
+    return audioSession.getVolume()
   }
 
   public func setVolume(volume: Float, showSystemUI: Bool) {
+    let clampedVolume = volume.clamp(to: 0.0...1.0)
+    if clampedVolume != 0.0 {
+      tempMuteVolume = nil
+    }
+
     if showSystemUI {
       volumeView.frame = CGRect()
       volumeView.showsRouteButton = true
@@ -31,8 +31,21 @@ public class VolumeController {
       return
     }
 
-    DispatchQueue.main.async {
-      slider.value = volume
+    slider.value = clampedVolume
+  }
+
+  public func isMuted() -> Bool {
+    return getVolume() == 0
+  }
+
+  public func setMute(isMute: Bool, showSystemUI: Bool) {
+    if isMute {
+      tempMuteVolume = getVolume()
+      setVolume(volume: 0, showSystemUI: showSystemUI)
+    } else {
+      guard let previousVolume = tempMuteVolume else { return }
+      setVolume(volume: previousVolume, showSystemUI: showSystemUI)
+      tempMuteVolume = nil
     }
   }
 }

@@ -6,11 +6,14 @@ struct ChannelName {
 struct MethodName {
   static let getVolume = "getVolume"
   static let setVolume = "setVolume"
+  static let isMuted = "isMuted"
+  static let setMute = "setMute"
 }
 
 struct MethodArgument {
   static let volume = "volume"
   static let showSystemUI = "showSystemUI"
+  static let isMute = "isMute"
 }
 
 struct EventArgument {

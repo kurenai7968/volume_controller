@@ -29,6 +29,17 @@ public class VolumeControllerPlugin: NSObject, FlutterPlugin {
       let showSystemUI = arg?[MethodArgument.showSystemUI] as? Bool
 
       volumeController.setVolume(volume: Float(volume!), showSystemUI: showSystemUI!)
+      result(nil)
+    case MethodName.isMuted:
+      let isMuted = volumeController.isMuted()
+      result(isMuted)
+    case MethodName.setMute:
+      let arg = call.arguments as? [String: Any]
+      let isMute = arg?[MethodArgument.isMute] as? Bool
+      let showSystemUI = arg?[MethodArgument.showSystemUI] as? Bool
+
+      volumeController.setMute(isMute: isMute!, showSystemUI: showSystemUI!)
+      result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }

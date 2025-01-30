@@ -31,12 +31,28 @@ class VolumeControllerPlugin : FlutterPlugin, MethodCallHandler {
 
   override fun onMethodCall(call: MethodCall, result: Result) {
     when (call.method) {
+      MethodName.GET_VOLUME -> {
+        val volume = volumeController.getVolume()
+        result.success(volume)
+      }
       MethodName.SET_VOLUME -> {
         val volume: Double = call.argument(MethodArgument.VOLUME)!!
         val showSystemUI: Boolean = call.argument(MethodArgument.SHOW_SYSTEM_UI)!!
-        volumeController.setVolumeByPercentage(volume, showSystemUI)
+
+        volumeController.setVolume(volume, showSystemUI)
+        result.success(null)
       }
-      MethodName.GET_VOLUME -> result.success(volumeController.getVolume())
+      MethodName.IS_MUTED -> {
+        val isMute = volumeController.isMute()
+        result.success(isMute)
+      }
+      MethodName.SET_MUTE -> {
+        val isMute: Boolean = call.argument(MethodArgument.IS_MUTE)!!
+        val showSystemUI: Boolean = call.argument(MethodArgument.SHOW_SYSTEM_UI)!!
+
+        volumeController.setMute(isMute, showSystemUI)
+        result.success(null)
+      }
       else -> result.notImplemented()
     }
   }

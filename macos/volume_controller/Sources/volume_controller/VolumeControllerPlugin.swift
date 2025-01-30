@@ -27,6 +27,16 @@ public class VolumeControllerPlugin: NSObject, FlutterPlugin {
       let volume = arg?[MethodArgument.volume] as? Double
 
       volumeController.setVolume(volume: Float(volume!))
+      result(nil)
+    case MethodName.isMuted:
+      let isMuted = volumeController.isMuted()
+      result(isMuted)
+    case MethodName.setMute:
+      let arg = call.arguments as? [String: Any]
+      let isMute = arg?[MethodArgument.isMute] as? Bool
+
+      volumeController.setMute(isMute: isMute!)
+      result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }

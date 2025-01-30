@@ -8,13 +8,16 @@ object ChannelName {
 }
 
 object MethodName {
-    const val SET_VOLUME = "setVolume"
     const val GET_VOLUME = "getVolume"
+    const val SET_VOLUME = "setVolume"
+    const val IS_MUTED = "isMuted"
+    const val SET_MUTE = "setMute"
 }
 
 object MethodArgument {
     const val VOLUME = "volume"
     const val SHOW_SYSTEM_UI = "showSystemUI"
+    const val IS_MUTE = "isMute"
 }
 
 object EventArgument {
