@@ -69,3 +69,7 @@
 ## 3.1.0
 
 * Support MacOS
+
+## 3.2.0
+
+* Add `isMuted` and `setMute` functions
