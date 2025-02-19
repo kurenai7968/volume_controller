@@ -1,6 +1,6 @@
 name: volume_controller
-description: A Flutter volume plugin for ios and android control system volume.
-version: 3.2.0
+description: A Flutter volume plugin for control system volume.
+version: 3.3.0
 homepage: https://github.com/kurenai7968/volume_controller
 
 environment:

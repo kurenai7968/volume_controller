@@ -73,3 +73,7 @@
 ## 3.2.0
 
 * Add `isMuted` and `setMute` functions
+
+## 3.3.0
+
+* Support Windows

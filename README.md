@@ -6,6 +6,16 @@ This plugin allows you to control and listen to the system volume on your device
 
 For iOS, you need to test on a real device as the simulator does not support volume control.
 
+## Supported Platforms
+
+| Platform | Supported |
+| -------- | --------- |
+| Android  | ✅        |
+| iOS      | ✅        |
+| macOS    | ✅        |
+| Window   | ✅        |
+| Linux    | ❌ (Coming soon) |
+
 ## Variables
 
 - `bool showSystemUI`: Show or hide the volume system UI. The default value is `true`.
