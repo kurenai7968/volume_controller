@@ -1,6 +1,6 @@
 # Volume Controller
 
-This plugin allows you to control and listen to the system volume on your device. It provides a simple API to get, set, and monitor the system volume.
+This plugin allows you to control and listen to the system volume on your device. It provides a simple API to get, set and monitor the system volume.
 
 ## Notes
 
@@ -13,55 +13,69 @@ For iOS, you need to test on a real device as the simulator does not support vol
 | Android  | ✅        |
 | iOS      | ✅        |
 | macOS    | ✅        |
-| Window   | ✅        |
+| Windows  | ✅        |
 | Linux    | ❌ (Coming soon) |
 
 ## Variables
 
-- `bool showSystemUI`: Show or hide the volume system UI. The default value is `true`.
-  Supported on iOS and Android only.
+### ShowSystemUI
 
-    ```dart
-    VolumeController.instance.showSystemUI = true;
-    ```
+Show or hide the volume system UI. The default value is `true`. Supported on iOS and Android only.
+
+```dart
+VolumeController.instance.showSystemUI = true;
+```
 
 ## Functions
 
-- `getVolume`: Get the current volume from the system.
+### GetVolume
 
-    ```dart
-    double volume = await VolumeController.instance.getVolume();
-    ```
+Get the current volume from the system
 
-- `setVolume`: Set the system volume. The input is a double number in the range [0.0, 1.0].
+```dart
+double volume = await VolumeController.instance.getVolume();
+```
 
-    ```dart
-    await VolumeController.instance.setVolume(double volume);
-    ```
+### SetVolume
 
-- `addListener`: Add a listener to monitor system volume changes.
-  - `fetchInitialVolume`: This parameter is optional and is used to fetch the initial volume when the listener is added. The default value is `true`.
+Set the system volume. The input is a double number in the range [0.0, 1.0].
 
-    ```dart
-    VolumeController.instance.addListener((volume) {
-      // Do something with the volume
-    }, fetchInitialVolume: true);
-    ```
+```dart
+await VolumeController.instance.setVolume(double volume);
+```
 
-- `removeListener`: Remove the volume listener.
+### AddListener
 
-    ```dart
-    VolumeController.instance.removeListener();
-    ```
+Add a listener to monitor system volume changes.
 
-- `isMuted`: Check if the system volume is muted. On iOS and Android, this checks if the volume level is equal to 0.
+- `fetchInitialVolume`: This parameter is optional and is used to fetch the initial volume when the listener is added. The default value is `true`.
 
-    ```dart
-    bool isMuted = await VolumeController.instance.isMuted();
-    ```
+```dart
+VolumeController.instance.addListener((volume) {
+  // Do something with the volume
+}, fetchInitialVolume: true);
+```
 
-- `setMute`: Mute or unmute the system volume. On iOS and Android, this sets the volume level to 0, and restores the previous volume level when unmuted.
+### RemoveListener
 
-    ```dart
-    await VolumeController.instance.setMute(bool mute);
-    ```
+Remove the volume listener.
+
+```dart
+VolumeController.instance.removeListener();
+```
+
+### IsMuted
+
+Check if the system volume is muted. On iOS and Android, this checks if the volume level is equal to 0.
+
+```dart
+bool isMuted = await VolumeController.instance.isMuted();
+```
+
+### SetMute
+
+Mute or unmute the system volume. On iOS and Android, this sets the volume level to 0, and restores the previous volume level when unmuted.
+
+```dart
+await VolumeController.instance.setMute(bool mute);
+```

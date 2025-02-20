@@ -77,3 +77,7 @@
 ## 3.3.0
 
 * Support Windows
+
+## 3.3.1
+
+* Update README.md
