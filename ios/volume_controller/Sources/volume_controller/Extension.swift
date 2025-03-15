@@ -17,4 +17,28 @@ extension AVAudioSession {
       return 0
     }
   }
+
+  func activateAudioSession() {
+    do {
+      try setActive(true)
+    } catch {
+      print("Error activating audio session: \(error)")
+    }
+  }
+
+  func deactivateAudioSession() {
+    do {
+      try setActive(false)
+    } catch {
+      print("Error deactivating audio session: \(error)")
+    }
+  }
+
+  func setAudioSessionCategory() {
+    do {
+      try setCategory(.playback, options: .mixWithOthers)
+    } catch {
+      print("Error setting audio session category: \(error)")
+    }
+  }
 }
