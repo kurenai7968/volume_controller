@@ -81,3 +81,7 @@
 ## 3.3.1
 
 * Update README.md
+
+## 3.3.2
+
+* Fix the audio session cannot be activated after background resume on iOS
