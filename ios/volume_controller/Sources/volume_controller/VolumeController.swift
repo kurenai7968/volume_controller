@@ -3,9 +3,13 @@ import MediaPlayer
 import UIKit
 
 public class VolumeController {
-  private let audioSession: AVAudioSession = AVAudioSession.sharedInstance()
+  private let audioSession: AVAudioSession
   private let volumeView: MPVolumeView = MPVolumeView()
   private var tempMuteVolume: Float?
+
+  init(audioSession: AVAudioSession) {
+    self.audioSession = audioSession
+  }
 
   public func getVolume() -> Float {
     return audioSession.getVolume()

@@ -5,10 +5,18 @@ import MediaPlayer
 import UIKit
 
 public class VolumeListener: NSObject, FlutterStreamHandler {
-  private let audioSession: AVAudioSession = AVAudioSession.sharedInstance()
+  private let audioSession: AVAudioSession
   private var eventSink: FlutterEventSink?
   private var isObserving: Bool = false
   private let volumeKey: String = "outputVolume"
+
+  init(audioSession: AVAudioSession) {
+    self.audioSession = audioSession
+  }
+
+  public var isObservingVolume: Bool {
+    return isObserving
+  }
 
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
     -> FlutterError?
@@ -27,6 +35,7 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
   }
 
   public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    audioSession.deactivateAudioSession()
     eventSink = nil
     removeVolumeObserver()
 
@@ -35,8 +44,8 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
 
   private func registerVolumeObserver() {
     do {
-      try audioSession.setCategory(.playback, options: .mixWithOthers)
-      try audioSession.setActive(true)
+      try audioSession.setAudioSessionCategory()
+      try audioSession.activateAudioSession()
       if !isObserving {
         audioSession.addObserver(
           self,
@@ -66,6 +75,10 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
     guard keyPath == volumeKey else {
       return
     }
+    eventSink?(audioSession.getVolume())
+  }
+
+  public func sendVolumeChangeEvent() {
     eventSink?(audioSession.getVolume())
   }
 }

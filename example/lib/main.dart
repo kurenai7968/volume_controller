@@ -112,14 +112,14 @@ class _MyAppState extends State<MyApp> {
                   },
                   child: Text('Unmute'),
                 ),
-                TextButton(
-                  onPressed: () async {
-                    _isMuted = await _volumeController.isMuted();
-                    setState(() {});
-                  },
-                  child: Text('Update Mute Status'),
-                )
               ],
+            ),
+            TextButton(
+              onPressed: () async {
+                _isMuted = await _volumeController.isMuted();
+                setState(() {});
+              },
+              child: Text('Update Mute Status'),
             ),
           ],
         ),
