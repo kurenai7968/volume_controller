@@ -27,7 +27,7 @@ apply plugin: "kotlin-android"
 android {
     namespace = "com.kurenai7968.volume_controller"
 
-    compileSdk = 35
+    compileSdk = 34
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

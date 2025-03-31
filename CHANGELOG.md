@@ -85,3 +85,7 @@
 ## 3.3.2
 
 * Fix the audio session cannot be activated after background resume on iOS
+
+## 3.3.3
+
+* Downgrade the android compileSdk version to 34
