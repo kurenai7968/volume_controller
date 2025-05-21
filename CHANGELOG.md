@@ -89,3 +89,7 @@
 ## 3.3.3
 
 * Downgrade the android compileSdk version to 34
+
+## 3.3.4
+
+* Fix iOS issue where removing volume listener would stop audio playback
