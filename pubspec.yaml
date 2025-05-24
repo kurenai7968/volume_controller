@@ -26,5 +26,7 @@ flutter:
         pluginClass: VolumeControllerPlugin
       macos:
         pluginClass: VolumeControllerPlugin
+      linux:
+        pluginClass: VolumeControllerPlugin
       windows:
         pluginClass: VolumeControllerPluginCApi
