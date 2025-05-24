@@ -14,7 +14,7 @@ For iOS, you need to test on a real device as the simulator does not support vol
 | iOS      | ✅        |
 | macOS    | ✅        |
 | Windows  | ✅        |
-| Linux    | ❌ (Coming soon) |
+| Linux    | ✅        |
 
 ## Variables
 
