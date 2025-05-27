@@ -12,7 +12,7 @@ public class VolumeController {
   }
 
   public func getVolume() -> Float {
-    return audioSession.getVolume()
+    return audioSession.outputVolume
   }
 
   public func setVolume(volume: Float, showSystemUI: Bool) {
