@@ -9,6 +9,7 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
   private var eventSink: FlutterEventSink?
   private var isObserving: Bool = false
   private let volumeKey: String = "outputVolume"
+  private var didActivateAudioSession: Bool = false
 
   init(audioSession: AVAudioSession) {
     self.audioSession = audioSession
@@ -35,7 +36,10 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
   }
 
   public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-    audioSession.deactivateAudioSession()
+    if didActivateAudioSession {
+      audioSession.deactivateAudioSession()
+      didActivateAudioSession = false
+    }
     eventSink = nil
     removeVolumeObserver()
 
@@ -46,6 +50,8 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
     do {
       try audioSession.setAudioSessionCategory()
       try audioSession.activateAudioSession()
+      didActivateAudioSession = true
+
       if !isObserving {
         audioSession.addObserver(
           self,
