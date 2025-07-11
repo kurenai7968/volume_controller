@@ -90,4 +90,16 @@ class VolumeController {
       MethodArgument.showSystemUI: showSystemUI,
     });
   }
+
+  Future<void> activateAudioSession() async {
+    await _methodChannel.invokeMethod(
+      MethodName.activateAudioSettion,
+    );
+  }
+
+  Future<void> deactivateAudioSession() async {
+    await _methodChannel.invokeMethod(
+      MethodName.deactivateAudioSession,
+    );
+  }
 }

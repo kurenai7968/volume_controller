@@ -52,4 +52,12 @@ public class VolumeController {
       tempMuteVolume = nil
     }
   }
+
+  public func activateAudioSession() {
+    try? AVAudioSession.sharedInstance().setActive(true)
+  }
+    
+  public func deactivateAudioSession() {
+    try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+  }
 }

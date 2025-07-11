@@ -8,6 +8,8 @@ struct MethodName {
   static let setVolume = "setVolume"
   static let isMuted = "isMuted"
   static let setMute = "setMute"
+  static let activateAudioSettion = "activateAudioSettion"
+  static let deactivateAudioSession = "deactivateAudioSession"
 }
 
 struct MethodArgument {
