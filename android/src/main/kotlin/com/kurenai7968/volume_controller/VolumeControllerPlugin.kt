@@ -53,6 +53,14 @@ class VolumeControllerPlugin : FlutterPlugin, MethodCallHandler {
         volumeController.setMute(isMute, showSystemUI)
         result.success(null)
       }
+      MethodName.ACTIVATE_AUDIO_SESSION -> {
+        // iOS specific method, not implemented for Android.
+        result.success(null)
+      }
+      MethodName.DEACTIVATE_AUDIO_SESSION -> {
+        // iOS specific method, not implemented for Android.
+        result.success(null)
+      }
       else -> result.notImplemented()
     }
   }

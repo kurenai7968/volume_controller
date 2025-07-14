@@ -12,6 +12,8 @@ object MethodName {
     const val SET_VOLUME = "setVolume"
     const val IS_MUTED = "isMuted"
     const val SET_MUTE = "setMute"
+    const val ACTIVATE_AUDIO_SESSION = "activateAudioSession"
+    const val DEACTIVATE_AUDIO_SESSION = "deactivateAudioSession"
 }
 
 object MethodArgument {
