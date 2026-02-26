@@ -2,7 +2,7 @@ import AVFoundation
 import Flutter
 import UIKit
 
-public class VolumeControllerPlugin: NSObject, FlutterPlugin {
+public class VolumeControllerPlugin: NSObject, FlutterPlugin, FlutterApplicationLifeCycleDelegate, FlutterSceneLifeCycleDelegate {
   private static let audioSession = AVAudioSession.sharedInstance()
   private static let volumeController = VolumeController(audioSession: audioSession)
   private static let volumeListener = VolumeListener(audioSession: audioSession)
@@ -22,6 +22,9 @@ public class VolumeControllerPlugin: NSObject, FlutterPlugin {
 
     // Application Life Cycle
     registrar.addApplicationDelegate(instance)
+    if #available(iOS 13.0, *) {
+      registrar.addSceneDelegate(instance)
+    }
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -51,10 +54,24 @@ public class VolumeControllerPlugin: NSObject, FlutterPlugin {
       result(FlutterMethodNotImplemented)
     }
   }
-}
 
-extension VolumeControllerPlugin: FlutterApplicationLifeCycleDelegate {
   public func applicationWillEnterForeground(_ application: UIApplication) {
+    // On iOS 13 and above, the scene delegate's sceneWillEnterForeground will be called instead of this method.
+    if #available(iOS 13.0, *) {
+      return
+    }
+
+    guard VolumeControllerPlugin.volumeListener.isObservingVolume else {
+      return
+    }
+
+    VolumeControllerPlugin.audioSession.setAudioSessionCategory()
+    VolumeControllerPlugin.audioSession.activateAudioSession()
+    VolumeControllerPlugin.volumeListener.sendVolumeChangeEvent()
+  }
+
+  @available(iOS 13.0, *)
+  public func sceneWillEnterForeground(_ scene: UIScene) {
     guard VolumeControllerPlugin.volumeListener.isObservingVolume else {
       return
     }
