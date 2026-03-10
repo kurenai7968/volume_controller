@@ -1,0 +1,64 @@
+name: Auto Tag
+
+on:
+  workflow_call:
+    secrets:
+      workflow_token:
+        required: true
+    outputs:
+      push_tag:
+        description: Whether a new tag was created and pushed
+        value: ${{ jobs.auto-tag.outputs.push_tag }}
+      tag_name:
+        description: The generated tag name
+        value: ${{ jobs.auto-tag.outputs.tag_name }}
+
+jobs:
+  auto-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      push_tag: ${{ steps.create_tag.outputs.push_tag }}
+      tag_name: ${{ steps.create_tag.outputs.TAG }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Read version
+        id: read_version
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          echo "Detected version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create tag
+        id: create_tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.workflow_token }}
+          VERSION: ${{ steps.read_version.outputs.VERSION }}
+        run: |
+          TAG="v$VERSION"
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+
+          if git ls-remote --tags "$REMOTE_URL" | grep -q "refs/tags/$TAG$"; then
+            echo "Tag $TAG already exists. Skipping."
+            echo "push_tag=false" >> $GITHUB_OUTPUT
+          else
+            echo "Creating tag $TAG"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG"
+            echo "push_tag=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push tag
+        if: steps.create_tag.outputs.push_tag == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.workflow_token }}
+          TAG: ${{ steps.create_tag.outputs.TAG }}
+        run: |
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          git push origin "$TAG"

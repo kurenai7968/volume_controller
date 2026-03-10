@@ -1,5 +1,9 @@
 # Volume Controller
 
+[![pub package](https://img.shields.io/pub/v/volume_controller.svg)](https://pub.dev/packages/volume_controller)
+[![build](https://github.com/kurenai7968/volume_controller/actions/workflows/publish.yml/badge.svg)](https://github.com/kurenai7968/volume_controller/actions/workflows/publish.yml)
+[![license](https://img.shields.io/github/license/kurenai7968/volume_controller)](https://github.com/kurenai7968/volume_controller/blob/master/LICENSE)
+
 This plugin allows you to control and listen to the system volume on your device. It provides a simple API to get, set and monitor the system volume.
 
 ## Notes

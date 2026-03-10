@@ -1,14 +1,38 @@
-name: Publish to pub.dev
+name: Publish
 
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+*"
+    branches:
+      - master
+    paths:
+      - "pubspec.yaml"
 
 jobs:
-  publish:
+  auto-tag:
+    uses: ./.github/workflows/auto-tag.yml
     permissions:
-      id-token: write # Required for authentication using OIDC
+      contents: write
+    secrets:
+      workflow_token: ${{ secrets.WORKFLOW_TOKEN }}
+
+  publish:
+    needs: auto-tag
+    if: needs.auto-tag.outputs.push_tag == 'true'
+    permissions:
+      id-token: write
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
-    # with:
-    #   working-directory: path/to/package/within/repository
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [auto-tag, publish]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.auto-tag.outputs.tag_name }}
+          generate_release_notes: true
