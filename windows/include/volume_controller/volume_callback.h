@@ -2,60 +2,32 @@
 #define VOLUME_CALLBACK_H_
 
 #include <windows.h>
+#include <mmdeviceapi.h>
 #include <endpointvolume.h>
-#include <iostream>
+#include <wrl/implements.h>
 #include <functional>
 
-namespace volume_callback
+namespace volume_controller
 {
-    class VolumeCallback : public IAudioEndpointVolumeCallback
+    class VolumeCallback : public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, IAudioEndpointVolumeCallback>
     {
     public:
-        VolumeCallback(std::function<void(float)> on_volume_change)
-            : refCount_(1), on_volume_change_(on_volume_change) {}
+        VolumeCallback(std::function<void(float)> callback) : callback_(callback) {}
 
-        // IUnknown methods
-        ULONG STDMETHODCALLTYPE AddRef() override
-        {
-            return InterlockedIncrement(&refCount_);
-        }
+        ~VolumeCallback() override = default;
 
-        ULONG STDMETHODCALLTYPE Release() override
-        {
-            ULONG ulRef = InterlockedDecrement(&refCount_);
-            if (0 == ulRef)
-            {
-                delete this;
-            }
-            return ulRef;
-        }
-
-        HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID **ppvInterface) override
-        {
-            if (IID_IUnknown == riid || __uuidof(IAudioEndpointVolumeCallback) == riid)
-            {
-                AddRef();
-                *ppvInterface = (IAudioEndpointVolumeCallback *)this;
-            }
-            else
-            {
-                *ppvInterface = nullptr;
-                return E_NOINTERFACE;
-            }
-            return S_OK;
-        }
-
-        // IAudioEndpointVolumeCallback method
         HRESULT STDMETHODCALLTYPE OnNotify(PAUDIO_VOLUME_NOTIFICATION_DATA pNotify) override
         {
-            on_volume_change_(pNotify->fMasterVolume);
+            if (pNotify && callback_)
+            {
+                callback_(pNotify->fMasterVolume);
+            }
             return S_OK;
         }
 
     private:
-        LONG refCount_;
-        std::function<void(float)> on_volume_change_;
+        std::function<void(float)> callback_;
     };
-} // namespace volume_callback
+} // namespace volume_controller
 
 #endif // VOLUME_CALLBACK_H_

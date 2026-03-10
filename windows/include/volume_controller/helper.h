@@ -3,6 +3,9 @@
 
 #include <flutter/encodable_value.h>
 
-const flutter::EncodableValue *GetArgValue(const flutter::EncodableMap &map, const char *key);
+namespace volume_controller
+{
+    const flutter::EncodableValue *GetArgValue(const flutter::EncodableMap &map, const char *key);
+}
 
 #endif // HELPER_H_

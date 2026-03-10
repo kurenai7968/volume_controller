@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
+#include <wrl/client.h>
 #include <iostream>
 
 namespace volume_controller
@@ -26,13 +27,13 @@ namespace volume_controller
         bool SetMute(bool isMute);
 
     private:
-        VolumeController() = default;
-        ~VolumeController() = default;
+        VolumeController();
+        ~VolumeController();
 
         VolumeController(const VolumeController &) = delete;
         VolumeController &operator=(const VolumeController &) = delete;
 
-        IAudioEndpointVolume *pVolume_ = nullptr;
+        Microsoft::WRL::ComPtr<IAudioEndpointVolume> endpoint_volume_;
     };
 }
 

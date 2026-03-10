@@ -1,7 +1,13 @@
 #include "volume_listener.h"
+#include <wrl/client.h>
 
-namespace volume_listener
+namespace volume_controller
 {
+    VolumeListener::~VolumeListener()
+    {
+        Dispose();
+    }
+
     VolumeListener &VolumeListener::GetInstance()
     {
         static VolumeListener instance;
@@ -10,68 +16,62 @@ namespace volume_listener
 
     bool VolumeListener::Initialize()
     {
-        IMMDeviceEnumerator *pEnumerator = nullptr;
-        IMMDevice *pDevice = nullptr;
-
         HRESULT hr = CoInitialize(nullptr);
         if (FAILED(hr))
         {
-            std::cerr << "Failed to initialize COM library: " << hr << std::endl;
+            std::cerr << "Failed to initialize COM library: " << std::hex << hr << std::endl;
             return false;
         }
 
+        Microsoft::WRL::ComPtr<IMMDeviceEnumerator> enumerator;
         hr = CoCreateInstance(
             __uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
-            __uuidof(IMMDeviceEnumerator), (void **)&pEnumerator);
+            IID_PPV_ARGS(&enumerator));
 
         if (FAILED(hr))
         {
-            std::cerr << "Failed to create device enumerator: " << hr << std::endl;
-            CoUninitialize();
+            std::cerr << "Failed to create device enumerator: " << std::hex << hr << std::endl;
             return false;
         }
 
-        hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &pDevice);
+        Microsoft::WRL::ComPtr<IMMDevice> device;
+        hr = enumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &device);
         if (FAILED(hr))
         {
-            std::cerr << "Failed to get default audio endpoint: " << hr << std::endl;
-            pEnumerator->Release();
-            CoUninitialize();
+            std::cerr << "Failed to get default audio endpoint: " << std::hex << hr << std::endl;
             return false;
         }
 
-        hr = pDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, nullptr, (void **)&pVolume_);
+        hr = device->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, nullptr, &endpoint_volume_);
         if (FAILED(hr))
         {
-            std::cerr << "Failed to activate audio endpoint volume: " << hr << std::endl;
-            pDevice->Release();
-            pEnumerator->Release();
-            CoUninitialize();
+            std::cerr << "Failed to activate audio endpoint volume: " << std::hex << hr << std::endl;
             return false;
         }
-
-        pDevice->Release();
-        pEnumerator->Release();
 
         return true;
     }
 
     void VolumeListener::Dispose()
     {
-        if (pVolume_)
-            pVolume_->Release();
+        DisposeVolumeNotification();
+        endpoint_volume_.Reset();
         CoUninitialize();
     }
 
-    bool VolumeListener::RegisterVolumeNotification(volume_callback::VolumeCallback *callback)
+    bool VolumeListener::RegisterVolumeNotification(Microsoft::WRL::ComPtr<IAudioEndpointVolumeCallback> callback)
     {
-        HRESULT hr = E_FAIL;
-        pCallback_ = callback;
+        if (!endpoint_volume_)
+        {
+            return false;
+        }
 
-        hr = pVolume_->RegisterControlChangeNotify(pCallback_);
+        callback_ = callback;
+        HRESULT hr = endpoint_volume_->RegisterControlChangeNotify(callback_.Get());
+
         if (FAILED(hr))
         {
-            std::cerr << "Failed to register volume notification: " << hr << std::endl;
+            std::cerr << "Failed to register volume notification: " << std::hex << hr << std::endl;
             return false;
         }
 
@@ -80,10 +80,10 @@ namespace volume_listener
 
     void VolumeListener::DisposeVolumeNotification()
     {
-        if (pCallback_)
+        if (endpoint_volume_ && callback_)
         {
-            pVolume_->UnregisterControlChangeNotify(pCallback_);
-            pCallback_->Release();
+            endpoint_volume_->UnregisterControlChangeNotify(callback_.Get());
+            callback_.Reset();
         }
     }
 }

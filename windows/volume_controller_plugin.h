@@ -32,7 +32,7 @@ namespace volume_controller
             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
     private:
-        volume_controller::VolumeController &volume_controller_;
+        VolumeController &volume_controller_;
     };
 
 } // namespace volume_controller

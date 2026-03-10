@@ -11,7 +11,7 @@
 #include "volume_controller.h"
 #include "helper.h"
 
-namespace volume_stream_handler
+namespace volume_controller
 {
     class VolumeStreamHandler : public flutter::StreamHandler<flutter::EncodableValue>
     {
@@ -31,7 +31,7 @@ namespace volume_stream_handler
 
     private:
         std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
-        volume_listener::VolumeListener &volume_listener_;
+        VolumeListener &volume_listener_;
     };
 }
 

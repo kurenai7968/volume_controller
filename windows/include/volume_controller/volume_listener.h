@@ -5,10 +5,12 @@
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
 #include <iostream>
+#include <wrl/client.h>
+#include <wrl/implements.h>
 
 #include "volume_callback.h"
 
-namespace volume_listener
+namespace volume_controller
 {
     class VolumeListener
     {
@@ -19,14 +21,20 @@ namespace volume_listener
 
         void Dispose();
 
-        bool RegisterVolumeNotification(volume_callback::VolumeCallback *callback);
+        bool RegisterVolumeNotification(Microsoft::WRL::ComPtr<IAudioEndpointVolumeCallback> callback);
 
         void DisposeVolumeNotification();
 
     private:
-        IAudioEndpointVolume *pVolume_ = nullptr;
-        volume_callback::VolumeCallback *pCallback_ = nullptr;
+        VolumeListener() = default;
+        ~VolumeListener();
+
+        VolumeListener(const VolumeListener &) = delete;
+        VolumeListener &operator=(const VolumeListener &) = delete;
+
+        Microsoft::WRL::ComPtr<IAudioEndpointVolume> endpoint_volume_;
+        Microsoft::WRL::ComPtr<IAudioEndpointVolumeCallback> callback_;
     };
-} // namespace volume_listener
+} // namespace volume_controller
 
 #endif // VOLUME_LISTENER_H_

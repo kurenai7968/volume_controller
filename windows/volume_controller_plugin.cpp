@@ -10,6 +10,10 @@
 #include <memory>
 #include <sstream>
 
+#include "include/volume_controller/constants.h"
+#include "include/volume_controller/helper.h"
+#include "include/volume_controller/volume_stream_handler.h"
+
 namespace volume_controller
 {
   VolumeControllerPlugin::VolumeControllerPlugin() : volume_controller_(VolumeController::GetInstance())
@@ -46,7 +50,7 @@ namespace volume_controller
         });
 
     // Register the event channel
-    event_channel->SetStreamHandler(std::make_unique<volume_stream_handler::VolumeStreamHandler>());
+    event_channel->SetStreamHandler(std::make_unique<VolumeStreamHandler>());
 
     // Set the channel to the plugin
     registrar->AddPlugin(std::move(plugin));

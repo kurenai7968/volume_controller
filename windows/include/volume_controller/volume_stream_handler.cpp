@@ -1,9 +1,11 @@
+#include <wrl/client.h>
+#include <wrl/implements.h>
+
 #include "volume_stream_handler.h"
 
-namespace volume_stream_handler
+namespace volume_controller
 {
-    // VolumeStreamHandler::VolumeStreamHandler() : volume_listener_(volume_listener::VolumeListener::GetInstance())
-    VolumeStreamHandler::VolumeStreamHandler() : volume_listener_(volume_listener::VolumeListener::GetInstance())
+    VolumeStreamHandler::VolumeStreamHandler() : volume_listener_(VolumeListener::GetInstance())
     {
         volume_listener_.Initialize();
     }
@@ -22,14 +24,14 @@ namespace volume_stream_handler
 
         event_sink_ = std::move(events);
 
-        auto callback = new volume_callback::VolumeCallback([this](float volume)
-                                                            { SendVolumeChangeEvent(volume); });
+        auto callback = Microsoft::WRL::Make<VolumeCallback>([this](float volume)
+                                                             { SendVolumeChangeEvent(volume); });
 
         volume_listener_.RegisterVolumeNotification(callback);
 
         if (fetchInitialVolume && *fetchInitialVolume)
         {
-            float volume = volume_controller::VolumeController::GetInstance().GetVolume();
+            float volume = VolumeController::GetInstance().GetVolume();
 
             // Send the initial volume
             event_sink_->Success(flutter::EncodableValue(volume));

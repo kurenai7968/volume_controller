@@ -1,11 +1,14 @@
 #include "helper.h"
 
-const flutter::EncodableValue *GetArgValue(const flutter::EncodableMap &map, const char *key)
+namespace volume_controller
 {
-    auto it = map.find(flutter::EncodableValue(key));
-    if (it == map.end())
+    const flutter::EncodableValue *GetArgValue(const flutter::EncodableMap &map, const char *key)
     {
-        return nullptr;
+        auto it = map.find(flutter::EncodableValue(key));
+        if (it == map.end())
+        {
+            return nullptr;
+        }
+        return &(it->second);
     }
-    return &(it->second);
 }
