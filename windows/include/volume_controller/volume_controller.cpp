@@ -1,4 +1,8 @@
 #include "volume_controller.h"
+#include <wrl/client.h>
+#include <mmdeviceapi.h>
+#include <endpointvolume.h>
+#include <iostream>
 
 namespace volume_controller
 {
@@ -18,8 +22,12 @@ namespace volume_controller
 
     bool VolumeController::Initialize()
     {
+        if (endpoint_volume_)
+            return true;
+
         HRESULT hr = CoInitialize(nullptr);
-        if (FAILED(hr))
+        // RPC_E_CHANGED_MODE means already initialized with a different mode, which is fine usually.
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
         {
             std::cerr << "Failed to initialize COM library: " << std::hex << hr << std::endl;
             return false;
@@ -55,7 +63,6 @@ namespace volume_controller
     void VolumeController::Dispose()
     {
         endpoint_volume_.Reset();
-        CoUninitialize();
     }
 
     float VolumeController::GetVolume()

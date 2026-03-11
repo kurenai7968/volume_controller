@@ -16,8 +16,11 @@ namespace volume_controller
 
     bool VolumeListener::Initialize()
     {
+        if (endpoint_volume_)
+            return true;
+
         HRESULT hr = CoInitialize(nullptr);
-        if (FAILED(hr))
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
         {
             std::cerr << "Failed to initialize COM library: " << std::hex << hr << std::endl;
             return false;
@@ -56,7 +59,6 @@ namespace volume_controller
     {
         DisposeVolumeNotification();
         endpoint_volume_.Reset();
-        CoUninitialize();
     }
 
     bool VolumeListener::RegisterVolumeNotification(Microsoft::WRL::ComPtr<IAudioEndpointVolumeCallback> callback)
