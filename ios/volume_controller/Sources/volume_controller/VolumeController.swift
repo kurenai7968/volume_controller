@@ -8,12 +8,6 @@ public class VolumeController {
   private var tempMuteVolume: Float?
   private var keyWindow: UIWindow? {
     if #available(iOS 13.0, *) {
-      if let scene = UIApplication.shared.connectedScenes.first(where: {
-        $0.activationState == .foregroundActive
-      }) as? UIWindowScene,
-      let window = (scene.delegate as? UIWindowSceneDelegate)?.window {
-        return window
-      }
       return UIApplication.shared.connectedScenes
         .compactMap { $0 as? UIWindowScene }
         .flatMap { $0.windows }
