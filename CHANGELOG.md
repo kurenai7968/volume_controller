@@ -1,3 +1,7 @@
+## 3.4.3
+
+* Fixed key window lookup on iOS when using the Scene-based lifecycle.
+
 ## 3.4.2
 
 * Add UIScene life cycle support
