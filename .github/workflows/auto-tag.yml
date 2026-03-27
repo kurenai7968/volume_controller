@@ -1,24 +1,15 @@
 name: Auto Tag
 
 on:
-  workflow_call:
-    secrets:
-      workflow_token:
-        required: true
-    outputs:
-      push_tag:
-        description: Whether a new tag was created and pushed
-        value: ${{ jobs.auto-tag.outputs.push_tag }}
-      tag_name:
-        description: The generated tag name
-        value: ${{ jobs.auto-tag.outputs.tag_name }}
+  push:
+    branches:
+      - master
+    paths:
+      - "pubspec.yaml"
 
 jobs:
   auto-tag:
     runs-on: ubuntu-latest
-    outputs:
-      push_tag: ${{ steps.create_tag.outputs.push_tag }}
-      tag_name: ${{ steps.create_tag.outputs.TAG }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,10 +27,11 @@ jobs:
       - name: Create tag
         id: create_tag
         env:
-          GITHUB_TOKEN: ${{ secrets.workflow_token }}
+          GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          TAG_PREFIX: "v"
           VERSION: ${{ steps.read_version.outputs.VERSION }}
         run: |
-          TAG="v$VERSION"
+          TAG="${TAG_PREFIX}${VERSION}"
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
           REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
 
@@ -57,7 +49,7 @@ jobs:
       - name: Push tag
         if: steps.create_tag.outputs.push_tag == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.workflow_token }}
+          GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
           TAG: ${{ steps.create_tag.outputs.TAG }}
         run: |
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git

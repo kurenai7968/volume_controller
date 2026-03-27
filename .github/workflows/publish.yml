@@ -2,22 +2,17 @@ name: Publish
 
 on:
   push:
-    branches:
-      - master
-    paths:
-      - "pubspec.yaml"
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
-  auto-tag:
-    uses: ./.github/workflows/auto-tag.yml
+  publish:
     permissions:
-      contents: write
-    secrets:
-      workflow_token: ${{ secrets.WORKFLOW_TOKEN }}
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
 
   release:
-    needs: auto-tag
-    if: needs.auto-tag.outputs.push_tag == 'true'
+    needs: publish
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -25,11 +20,5 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.auto-tag.outputs.tag_name }}
+          tag_name: ${{ github.ref_name }}
           generate_release_notes: true
-
-  publish:
-    needs: release
-    permissions:
-      id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
