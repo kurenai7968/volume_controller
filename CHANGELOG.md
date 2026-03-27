@@ -1,3 +1,7 @@
+## 3.4.4
+
+* Fix iOS 12 support issue
+
 ## 3.4.3
 
 * Fixed key window lookup on iOS when using the Scene-based lifecycle.
@@ -66,7 +70,7 @@
 
 ## 2.0.5
 
-* Android: Update Versions of Kotlin, Gradle, Gradle Android Pluign
+* Android: Update Versions of Kotlin, Gradle, Gradle Android Plugin
 
 ## 2.0.4
 
@@ -74,7 +78,7 @@
 
 ## 2.0.3
 
-* Andorid: Migrate maven repository from jcenter to mavenCentral
+* Android: Migrate maven repository from jcenter to mavenCentral
 
 ## 2.0.2
 
