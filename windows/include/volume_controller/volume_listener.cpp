@@ -58,32 +58,43 @@ namespace volume_listener
 
     void VolumeListener::Dispose()
     {
+        DisposeVolumeNotification();
         if (pVolume_)
+        {
             pVolume_->Release();
+            pVolume_ = nullptr;
+        }
         CoUninitialize();
     }
 
     bool VolumeListener::RegisterVolumeNotification(volume_callback::VolumeCallback *callback)
     {
-        HRESULT hr = E_FAIL;
-        pCallback_ = callback;
+        DisposeVolumeNotification();
 
-        hr = pVolume_->RegisterControlChangeNotify(pCallback_);
-        if (FAILED(hr))
+        if (!pVolume_ || !callback)
         {
-            std::cerr << "Failed to register volume notification: " << hr << std::endl;
             return false;
         }
 
+        HRESULT hr = pVolume_->RegisterControlChangeNotify(callback);
+        if (FAILED(hr))
+        {
+            std::cerr << "Failed to register volume notification: " << hr << std::endl;
+            callback->Release();
+            return false;
+        }
+
+        pCallback_ = callback;
         return true;
     }
 
     void VolumeListener::DisposeVolumeNotification()
     {
-        if (pCallback_)
+        if (pVolume_ && pCallback_)
         {
             pVolume_->UnregisterControlChangeNotify(pCallback_);
             pCallback_->Release();
+            pCallback_ = nullptr;
         }
     }
 }
