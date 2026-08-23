@@ -73,6 +73,10 @@ namespace volume_listener
 
         if (!pVolume_ || !callback)
         {
+            if (callback)
+            {
+                callback->Release();
+            }
             return false;
         }
 
