@@ -1,3 +1,10 @@
+## 3.6.1
+
+* Windows: Release the volume callback when notification registration fails because no audio endpoint is available
+* Windows: Send volume listener events on the Flutter platform thread
+* Windows: Update GoogleTest so plugin tests configure with CMake 4
+* Windows: Dispatch volume events through a message-only window created on the Flutter platform thread
+
 ## 3.6.0
 
 * Update minimum supported SDKs to Flutter 3.44 and Dart 3.12

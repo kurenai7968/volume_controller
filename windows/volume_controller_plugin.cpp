@@ -46,7 +46,8 @@ namespace volume_controller
         });
 
     // Register the event channel
-    event_channel->SetStreamHandler(std::make_unique<volume_stream_handler::VolumeStreamHandler>());
+    event_channel->SetStreamHandler(
+        std::make_unique<volume_stream_handler::VolumeStreamHandler>());
 
     // Set the channel to the plugin
     registrar->AddPlugin(std::move(plugin));

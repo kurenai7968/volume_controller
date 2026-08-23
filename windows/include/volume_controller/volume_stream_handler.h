@@ -3,8 +3,9 @@
 
 #include <flutter/event_channel.h>
 #include <flutter/encodable_value.h>
+#include <windows.h>
+#include <functional>
 #include <memory>
-#include <mutex>
 
 #include "constants.h"
 #include "volume_listener.h"
@@ -30,8 +31,18 @@ namespace volume_stream_handler
             const flutter::EncodableValue *arguments) override;
 
     private:
+        void EnsurePlatformWindow();
+        void DestroyPlatformWindow();
+        void PostToPlatformThread(std::function<void()> task);
+        void DrainPendingTasks();
+
+        static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
+        static HMODULE GetPluginModule();
+
         std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
         volume_listener::VolumeListener &volume_listener_;
+        HWND hwnd_ = nullptr;
+        DWORD platform_thread_id_ = 0;
     };
 }
 

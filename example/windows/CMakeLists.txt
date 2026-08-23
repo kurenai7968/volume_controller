@@ -52,8 +52,9 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 
-# Enable the test target.
-set(include_volume_controller_tests TRUE)
+# Plugin unit tests pull in GoogleTest via FetchContent. Keep them off for the
+# example app so CMake 4+ and GoogleTest do not affect running the example.
+set(include_volume_controller_tests FALSE)
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.

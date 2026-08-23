@@ -48,7 +48,10 @@ namespace volume_callback
         // IAudioEndpointVolumeCallback method
         HRESULT STDMETHODCALLTYPE OnNotify(PAUDIO_VOLUME_NOTIFICATION_DATA pNotify) override
         {
-            on_volume_change_(pNotify->fMasterVolume);
+            if (pNotify && on_volume_change_)
+            {
+                on_volume_change_(pNotify->fMasterVolume);
+            }
             return S_OK;
         }
 
