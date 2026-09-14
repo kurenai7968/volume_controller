@@ -6,8 +6,10 @@
 * iOS: Stop deactivating the shared audio session when the volume listener is cancelled
 * Dart: Document mute semantics, add `volumeChanges`, and allow per-call `showSystemUI`
 * Dart: Treat a null `isMuted` result as unmuted instead of throwing
+* Dart: Drop stale `addListener` snapshots after replace or cancel, and ignore `getVolume` errors for the initial fetch
 * macOS: Avoid force-unwraps; fall back to per-channel volume/mute; follow default-output changes
 * Windows: Share COM/device lifetime, rebind on default-device change, and reject invalid arguments
+* Windows: Keep the volume callback if rebind notification registration fails so later device changes can restore events
 * Linux: Fall back across mixer elements, poll ALSA descriptors, and reject invalid arguments
 * Refresh the example app to show mute separately from volume, `volumeChanges`, and platform HUD
 * Android: Build with Gradle 9.3.1 and AGP 9.1.0 so JDK 25 can assemble the example

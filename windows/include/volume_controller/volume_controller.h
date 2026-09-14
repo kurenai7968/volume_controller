@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
+#include <atomic>
 #include <mutex>
 
 #include "volume_callback.h"
@@ -45,6 +46,12 @@ namespace volume_controller
         bool BindDefaultEndpointLocked();
         void ReleaseEndpointLocked();
         void OnDefaultDeviceChanged();
+        void RebindDefaultEndpoint();
+        void EnsureRebindWindowLocked();
+        void DestroyRebindWindowLocked();
+
+        static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
+        static HMODULE GetPluginModule();
 
         friend class DeviceNotificationClient;
 
@@ -55,6 +62,7 @@ namespace volume_controller
         IAudioEndpointVolume *pVolume_ = nullptr;
         volume_callback::VolumeCallback *pCallback_ = nullptr;
         DeviceNotificationClient *pDeviceClient_ = nullptr;
+        std::atomic<HWND> hwnd_{nullptr};
     };
 }
 

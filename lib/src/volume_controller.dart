@@ -64,9 +64,7 @@ class VolumeController {
     }
 
     _eventSubscription = _eventChannel
-        .receiveBroadcastStream({
-          EventArgument.fetchInitialVolume: false,
-        })
+        .receiveBroadcastStream({EventArgument.fetchInitialVolume: false})
         .listen(
           (event) {
             _volumeStreamController?.add((event as num).toDouble());
@@ -97,25 +95,42 @@ class VolumeController {
   }) {
     removeListener();
 
-    _volumeListener = volumeChanges.listen(onData);
+    late final _AddListenerSubscription<double> subscription;
+    subscription = _AddListenerSubscription(
+      volumeChanges.listen(onData),
+      onCancel: () {
+        if (identical(_volumeListener, subscription)) {
+          _volumeListener = null;
+        }
+      },
+    );
+    _volumeListener = subscription;
 
     if (fetchInitialVolume) {
-      getVolume().then((volume) {
-        if (_volumeListener != null) {
+      getVolume().then(
+        (volume) {
+          if (!identical(_volumeListener, subscription)) {
+            return;
+          }
           onData?.call(volume);
-        }
-      });
+        },
+        onError: (Object _, StackTrace _) {
+          // Initial snapshot is best-effort. Live errors still flow through
+          // [volumeChanges].
+        },
+      );
     }
 
-    return _volumeListener!;
+    return subscription;
   }
 
   /// Cancels the volume listener created by [addListener].
   ///
   /// Subscriptions created directly from [volumeChanges] are not cancelled.
   void removeListener() {
-    _volumeListener?.cancel();
+    final listener = _volumeListener;
     _volumeListener = null;
+    listener?.cancel();
   }
 
   /// Gets the current system volume.
@@ -166,4 +181,44 @@ class VolumeController {
       MethodArgument.showSystemUI: showSystemUI ?? this.showSystemUI,
     });
   }
+}
+
+/// Forwards [StreamSubscription] and reports cancel so [VolumeController]
+/// can drop a stale [VolumeController.addListener] snapshot.
+class _AddListenerSubscription<T> implements StreamSubscription<T> {
+  _AddListenerSubscription(this._inner, {required this._onCancel});
+
+  final StreamSubscription<T> _inner;
+  final void Function() _onCancel;
+  var _isCanceled = false;
+
+  @override
+  Future<void> cancel() {
+    if (!_isCanceled) {
+      _isCanceled = true;
+      _onCancel();
+    }
+    return _inner.cancel();
+  }
+
+  @override
+  void onData(void Function(T data)? handleData) => _inner.onData(handleData);
+
+  @override
+  void onError(Function? handleError) => _inner.onError(handleError);
+
+  @override
+  void onDone(void Function()? handleDone) => _inner.onDone(handleDone);
+
+  @override
+  void pause([Future<void>? resumeSignal]) => _inner.pause(resumeSignal);
+
+  @override
+  void resume() => _inner.resume();
+
+  @override
+  bool get isPaused => _inner.isPaused;
+
+  @override
+  Future<E> asFuture<E>([E? futureValue]) => _inner.asFuture(futureValue);
 }

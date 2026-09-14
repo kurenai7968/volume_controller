@@ -4,6 +4,13 @@
 
 namespace volume_controller
 {
+    namespace
+    {
+        constexpr UINT kRebindMessage = WM_APP + 1;
+        constexpr wchar_t kRebindWindowClass[] =
+            L"com.kurenai7968.volume_controller.DeviceRebind";
+    }
+
     class DeviceNotificationClient : public IMMNotificationClient
     {
     public:
@@ -142,6 +149,8 @@ namespace volume_controller
             return false;
         }
 
+        EnsureRebindWindowLocked();
+
         pDeviceClient_ = new DeviceNotificationClient(this);
         hr = pEnumerator_->RegisterEndpointNotificationCallback(pDeviceClient_);
         if (FAILED(hr))
@@ -162,9 +171,6 @@ namespace volume_controller
 
     void VolumeController::DisposeLocked()
     {
-        DisposeVolumeNotification();
-        ReleaseEndpointLocked();
-
         if (pEnumerator_ && pDeviceClient_)
         {
             pEnumerator_->UnregisterEndpointNotificationCallback(pDeviceClient_);
@@ -174,6 +180,11 @@ namespace volume_controller
             pDeviceClient_->Release();
             pDeviceClient_ = nullptr;
         }
+
+        DestroyRebindWindowLocked();
+        DisposeVolumeNotification();
+        ReleaseEndpointLocked();
+
         if (pEnumerator_)
         {
             pEnumerator_->Release();
@@ -219,9 +230,10 @@ namespace volume_controller
             if (FAILED(hr))
             {
                 std::cerr << "Failed to register volume notification: " << hr << std::endl;
-                pCallback_->Release();
-                pCallback_ = nullptr;
-                return false;
+                // Keep pCallback_. It belongs to the Dart EventChannel
+                // subscription, not this endpoint. Releasing it here would
+                // leave volumeChanges silent until the Dart listener is torn
+                // down and attached again. A later rebind can register it.
             }
         }
 
@@ -243,8 +255,97 @@ namespace volume_controller
 
     void VolumeController::OnDefaultDeviceChanged()
     {
+        // IMMNotificationClient must not wait on a lock or call enumerator
+        // methods. Post the rebind onto the thread that owns the COM objects.
+        HWND hwnd = hwnd_.load(std::memory_order_acquire);
+        if (hwnd)
+        {
+            PostMessageW(hwnd, kRebindMessage, 0, 0);
+        }
+    }
+
+    void VolumeController::RebindDefaultEndpoint()
+    {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (init_count_ == 0)
+        {
+            return;
+        }
         BindDefaultEndpointLocked();
+    }
+
+    void VolumeController::EnsureRebindWindowLocked()
+    {
+        if (hwnd_.load(std::memory_order_relaxed))
+        {
+            return;
+        }
+
+        HMODULE instance = GetPluginModule();
+        WNDCLASSW window_class = {};
+        window_class.lpfnWndProc = WndProc;
+        window_class.hInstance = instance;
+        window_class.lpszClassName = kRebindWindowClass;
+        if (!RegisterClassW(&window_class))
+        {
+            const DWORD error = GetLastError();
+            if (error != ERROR_CLASS_ALREADY_EXISTS)
+            {
+                std::cerr << "Failed to register device-rebind window class: " << error << std::endl;
+                return;
+            }
+        }
+
+        HWND hwnd = CreateWindowExW(0, kRebindWindowClass, L"", 0, 0, 0, 0, 0,
+                                    HWND_MESSAGE, nullptr, instance, nullptr);
+        if (!hwnd)
+        {
+            std::cerr << "Failed to create device-rebind window: " << GetLastError() << std::endl;
+            return;
+        }
+
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+        hwnd_.store(hwnd, std::memory_order_release);
+    }
+
+    void VolumeController::DestroyRebindWindowLocked()
+    {
+        HWND hwnd = hwnd_.exchange(nullptr, std::memory_order_acq_rel);
+        if (!hwnd)
+        {
+            return;
+        }
+
+        MSG message;
+        while (PeekMessageW(&message, hwnd, kRebindMessage, kRebindMessage, PM_REMOVE))
+        {
+        }
+
+        DestroyWindow(hwnd);
+    }
+
+    HMODULE VolumeController::GetPluginModule()
+    {
+        HMODULE module = nullptr;
+        GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                               GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           reinterpret_cast<LPCWSTR>(&GetPluginModule), &module);
+        return module;
+    }
+
+    LRESULT CALLBACK VolumeController::WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+    {
+        if (message == kRebindMessage)
+        {
+            auto *self = reinterpret_cast<VolumeController *>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+            if (self)
+            {
+                self->RebindDefaultEndpoint();
+            }
+            return 0;
+        }
+
+        return DefWindowProcW(hwnd, message, wparam, lparam);
     }
 
     float VolumeController::GetVolume()
