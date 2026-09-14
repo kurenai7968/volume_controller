@@ -33,7 +33,10 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _controller.showSystemUI = _showSystemUi;
-    _subscription = _controller.volumeChanges.listen(_onVolumeEvent);
+    _subscription = _controller.addListener(
+      _onVolumeEvent,
+      fetchInitialVolume: false,
+    );
     unawaited(_readNow(silent: true));
   }
 
@@ -200,7 +203,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _onSliderChangeEnd(double value) async {
     try {
-      await _controller.setVolume(value, showSystemUI: _showSystemUi);
+      await _controller.setVolume(value);
       await _refreshMute();
     } on PlatformException catch (error) {
       _handleError(error.message ?? 'Could not set volume.');
@@ -218,7 +221,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _setMuted(bool mute) async {
     setState(() => _lastError = null);
     try {
-      await _controller.setMute(mute, showSystemUI: _showSystemUi);
+      await _controller.setMute(mute);
       await _readNow(silent: true);
     } on PlatformException catch (error) {
       _handleError(error.message ?? 'Could not change mute.');

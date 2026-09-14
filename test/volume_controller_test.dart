@@ -63,26 +63,30 @@ void main() {
     });
   });
 
-  test(
-    'setVolume and setMute accept a per-call showSystemUI override',
-    () async {
-      await VolumeController.instance.setVolume(0.8, showSystemUI: true);
-      await VolumeController.instance.setMute(true, showSystemUI: false);
+  test('setMute uses the instance showSystemUI', () async {
+    VolumeController.instance.showSystemUI = false;
 
-      expect(recorded[0].arguments[MethodArgument.showSystemUI], isTrue);
-      expect(recorded[1].method, MethodName.setMute);
-      expect(recorded[1].arguments, {
-        MethodArgument.isMute: true,
-        MethodArgument.showSystemUI: false,
-      });
-    },
-  );
+    await VolumeController.instance.setMute(true);
 
-  test('addListener fetches the current volume when requested', () async {
+    expect(recorded.single.method, MethodName.setMute);
+    expect(recorded.single.arguments, {
+      MethodArgument.isMute: true,
+      MethodArgument.showSystemUI: false,
+    });
+  });
+
+  test('addListener requests the initial volume from the event channel',
+      () async {
     final volumes = <double>[];
+    Object? listenArgs;
     messenger.setMockStreamHandler(
       eventChannel,
-      MockStreamHandler.inline(onListen: (arguments, events) {}),
+      MockStreamHandler.inline(
+        onListen: (arguments, events) {
+          listenArgs = arguments;
+          events.success(0.4);
+        },
+      ),
     );
 
     final subscription = VolumeController.instance.addListener(
@@ -94,92 +98,31 @@ void main() {
     VolumeController.instance.removeListener();
 
     expect(volumes, [0.4]);
-    expect(
-      recorded.where((call) => call.method == MethodName.getVolume),
-      isNotEmpty,
-    );
+    expect(listenArgs, {EventArgument.fetchInitialVolume: true});
   });
 
-  test(
-    'addListener does not deliver a stale getVolume to a replaced callback',
-    () async {
-      final pending = <Completer<double>>[];
-      messenger.setMockMethodCallHandler(methodChannel, (call) {
-        recorded.add(call);
-        if (call.method == MethodName.getVolume) {
-          final completer = Completer<double>();
-          pending.add(completer);
-          return completer.future;
-        }
-        return null;
-      });
-      messenger.setMockStreamHandler(
-        eventChannel,
-        MockStreamHandler.inline(onListen: (arguments, events) {}),
-      );
+  test('addListener can skip the initial volume', () async {
+    Object? listenArgs;
+    messenger.setMockStreamHandler(
+      eventChannel,
+      MockStreamHandler.inline(
+        onListen: (arguments, events) {
+          listenArgs = arguments;
+        },
+      ),
+    );
 
-      final firstVolumes = <double>[];
-      final secondVolumes = <double>[];
-      VolumeController.instance.addListener(firstVolumes.add);
-      VolumeController.instance.addListener(secondVolumes.add);
+    final subscription = VolumeController.instance.addListener(
+      (_) {},
+      fetchInitialVolume: false,
+    );
+    await pumpEventQueue();
+    await subscription.cancel();
 
-      expect(pending, hasLength(2));
-      pending[0].complete(0.1);
-      pending[1].complete(0.8);
-      await pumpEventQueue();
+    expect(listenArgs, {EventArgument.fetchInitialVolume: false});
+  });
 
-      expect(firstVolumes, isEmpty);
-      expect(secondVolumes, [0.8]);
-    },
-  );
-
-  test(
-    'addListener does not deliver getVolume after the listener is cancelled',
-    () async {
-      final delayedVolume = Completer<double>();
-      messenger.setMockMethodCallHandler(methodChannel, (call) {
-        recorded.add(call);
-        if (call.method == MethodName.getVolume) {
-          return delayedVolume.future;
-        }
-        return null;
-      });
-      messenger.setMockStreamHandler(
-        eventChannel,
-        MockStreamHandler.inline(onListen: (arguments, events) {}),
-      );
-
-      final volumes = <double>[];
-      final subscription = VolumeController.instance.addListener(volumes.add);
-      await subscription.cancel();
-      delayedVolume.complete(0.6);
-      await pumpEventQueue();
-
-      expect(volumes, isEmpty);
-    },
-  );
-
-  test(
-    'addListener does not surface getVolume failures as unhandled errors',
-    () async {
-      messenger.setMockMethodCallHandler(methodChannel, (call) async {
-        recorded.add(call);
-        if (call.method == MethodName.getVolume) {
-          throw PlatformException(code: 'unavailable', message: 'failed');
-        }
-        return null;
-      });
-      messenger.setMockStreamHandler(
-        eventChannel,
-        MockStreamHandler.inline(onListen: (arguments, events) {}),
-      );
-
-      VolumeController.instance.addListener((_) {}, fetchInitialVolume: true);
-      await pumpEventQueue();
-    },
-  );
-
-  test('volumeChanges emits native volume events', () async {
+  test('addListener emits native volume events', () async {
     final listenReady = Completer<MockStreamHandlerEventSink>();
     messenger.setMockStreamHandler(
       eventChannel,
@@ -191,8 +134,9 @@ void main() {
     );
 
     final volumes = <double>[];
-    final subscription = VolumeController.instance.volumeChanges.listen(
+    final subscription = VolumeController.instance.addListener(
       volumes.add,
+      fetchInitialVolume: false,
     );
     final sink = await listenReady.future;
     sink.success(0.55);

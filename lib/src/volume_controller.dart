@@ -32,105 +32,42 @@ class VolumeController {
     ChannelName.eventChannel,
   );
 
-  StreamController<double>? _volumeStreamController;
-  StreamSubscription<dynamic>? _eventSubscription;
+  /// Volume listener subscription
   StreamSubscription<double>? _volumeListener;
 
   /// Whether to show the system UI when changing the volume.
   ///
-  /// Used as the default for [setVolume] and [setMute] when `showSystemUI` is
-  /// omitted. Supported on Android and iOS only.
+  /// Supported on Android and iOS only.
   bool showSystemUI = true;
 
   /// Private constructor for singleton
   VolumeController._();
-
-  /// A broadcast stream of system volume changes in the range `0.0` to `1.0`.
-  ///
-  /// This does not emit the current volume when a listener is added. Use
-  /// [getVolume] or [addListener] with `fetchInitialVolume: true` for that.
-  /// Multiple subscribers share one native listener.
-  Stream<double> get volumeChanges {
-    _volumeStreamController ??= StreamController<double>.broadcast(
-      onListen: _attachNativeVolumeListener,
-      onCancel: _detachNativeVolumeListener,
-    );
-    return _volumeStreamController!.stream;
-  }
-
-  void _attachNativeVolumeListener() {
-    if (_eventSubscription != null) {
-      return;
-    }
-
-    _eventSubscription = _eventChannel
-        .receiveBroadcastStream({EventArgument.fetchInitialVolume: false})
-        .listen(
-          (event) {
-            _volumeStreamController?.add((event as num).toDouble());
-          },
-          onError: (Object error, StackTrace stackTrace) {
-            _volumeStreamController?.addError(error, stackTrace);
-          },
-        );
-  }
-
-  void _detachNativeVolumeListener() {
-    _eventSubscription?.cancel();
-    _eventSubscription = null;
-  }
 
   /// Adds a listener for volume changes.
   ///
   /// This method listens to the system volume. The volume value will be
   /// generated when the volume changes. Optionally, the initial volume can be
   /// fetched and provided to the listener immediately.
-  ///
-  /// Calling this again replaces the subscription created by the previous
-  /// [addListener] call. Other listeners attached to [volumeChanges] are left
-  /// intact.
   StreamSubscription<double> addListener(
     void Function(double)? onData, {
     bool fetchInitialVolume = true,
   }) {
     removeListener();
 
-    late final _AddListenerSubscription<double> subscription;
-    subscription = _AddListenerSubscription(
-      volumeChanges.listen(onData),
-      onCancel: () {
-        if (identical(_volumeListener, subscription)) {
-          _volumeListener = null;
-        }
-      },
-    );
-    _volumeListener = subscription;
+    _volumeListener = _eventChannel
+        .receiveBroadcastStream({
+          EventArgument.fetchInitialVolume: fetchInitialVolume,
+        })
+        .map((event) => (event as num).toDouble())
+        .listen(onData);
 
-    if (fetchInitialVolume) {
-      getVolume().then(
-        (volume) {
-          if (!identical(_volumeListener, subscription)) {
-            return;
-          }
-          onData?.call(volume);
-        },
-        onError: (Object _, StackTrace _) {
-          // Initial snapshot is best-effort. Live errors still flow through
-          // [volumeChanges].
-        },
-      );
-    }
-
-    return subscription;
+    return _volumeListener!;
   }
 
-  /// Cancels the volume listener created by [addListener].
-  ///
-  /// Subscriptions created directly from [volumeChanges] are not cancelled.
+  /// Cancels the volume listener.
   void removeListener() {
-    final listener = _volumeListener;
+    _volumeListener?.cancel();
     _volumeListener = null;
-    listener?.cancel();
   }
 
   /// Gets the current system volume.
@@ -146,13 +83,10 @@ class VolumeController {
   ///
   /// [volume] should be a double between `0.0` (minimum) and `1.0` (maximum).
   /// Values outside that range are clamped by the native implementations.
-  ///
-  /// [showSystemUI] overrides [VolumeController.showSystemUI] for this call.
-  /// Supported on Android and iOS only.
-  Future<void> setVolume(double volume, {bool? showSystemUI}) async {
+  Future<void> setVolume(double volume) async {
     await _methodChannel.invokeMethod(MethodName.setVolume, {
       MethodArgument.volume: volume,
-      MethodArgument.showSystemUI: showSystemUI ?? this.showSystemUI,
+      MethodArgument.showSystemUI: showSystemUI,
     });
   }
 
@@ -172,53 +106,10 @@ class VolumeController {
   /// On iOS, mute sets the volume to `0` and unmute restores the previous
   /// volume saved by this plugin. Unmute is a no-op if this plugin has not
   /// muted since the last non-zero [setVolume].
-  ///
-  /// [showSystemUI] overrides [VolumeController.showSystemUI] for this call.
-  /// Supported on Android and iOS only.
-  Future<void> setMute(bool mute, {bool? showSystemUI}) async {
+  Future<void> setMute(bool mute) async {
     await _methodChannel.invokeMethod(MethodName.setMute, {
       MethodArgument.isMute: mute,
-      MethodArgument.showSystemUI: showSystemUI ?? this.showSystemUI,
+      MethodArgument.showSystemUI: showSystemUI,
     });
   }
-}
-
-/// Forwards [StreamSubscription] and reports cancel so [VolumeController]
-/// can drop a stale [VolumeController.addListener] snapshot.
-class _AddListenerSubscription<T> implements StreamSubscription<T> {
-  _AddListenerSubscription(this._inner, {required this._onCancel});
-
-  final StreamSubscription<T> _inner;
-  final void Function() _onCancel;
-  var _isCanceled = false;
-
-  @override
-  Future<void> cancel() {
-    if (!_isCanceled) {
-      _isCanceled = true;
-      _onCancel();
-    }
-    return _inner.cancel();
-  }
-
-  @override
-  void onData(void Function(T data)? handleData) => _inner.onData(handleData);
-
-  @override
-  void onError(Function? handleError) => _inner.onError(handleError);
-
-  @override
-  void onDone(void Function()? handleDone) => _inner.onDone(handleDone);
-
-  @override
-  void pause([Future<void>? resumeSignal]) => _inner.pause(resumeSignal);
-
-  @override
-  void resume() => _inner.resume();
-
-  @override
-  bool get isPaused => _inner.isPaused;
-
-  @override
-  Future<E> asFuture<E>([E? futureValue]) => _inner.asFuture(futureValue);
 }

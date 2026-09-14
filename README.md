@@ -25,7 +25,7 @@ The iOS plugin uses the scene lifecycle APIs introduced for Flutter plugins in F
 ## Notes
 
 - iOS volume control must be tested on a real device. The simulator does not support system volume control.
-- `showSystemUI` is supported on Android and iOS only. Pass it per call or set `VolumeController.instance.showSystemUI`.
+- `showSystemUI` is supported on Android and iOS only.
 - Mute is not volume `0` on every platform:
   - **Windows, macOS, Linux:** system mute. Volume can stay non-zero while muted.
   - **Android API 23+:** `STREAM_MUSIC` mute (`isStreamMute` / `ADJUST_MUTE`).
@@ -58,17 +58,6 @@ Set the system volume. The input should be in the range `0.0` to `1.0`.
 
 ```dart
 await VolumeController.instance.setVolume(double volume);
-await VolumeController.instance.setVolume(0.5, showSystemUI: false);
-```
-
-### VolumeChanges
-
-Listen to system volume changes. This stream does not emit the current volume when a listener is added.
-
-```dart
-VolumeController.instance.volumeChanges.listen((volume) {
-  // Do something with the volume
-});
 ```
 
 ### AddListener
@@ -76,7 +65,6 @@ VolumeController.instance.volumeChanges.listen((volume) {
 Add a listener to monitor system volume changes.
 
 - `fetchInitialVolume`: This parameter is optional and is used to fetch the initial volume when the listener is added. The default value is `true`.
-- Calling `addListener` again replaces the previous `addListener` subscription. Listeners attached to `volumeChanges` are left intact.
 
 ```dart
 VolumeController.instance.addListener((volume) {
@@ -86,7 +74,7 @@ VolumeController.instance.addListener((volume) {
 
 ### RemoveListener
 
-Remove the volume listener created by `addListener`.
+Remove the volume listener.
 
 ```dart
 VolumeController.instance.removeListener();
@@ -106,5 +94,4 @@ Mute or unmute the system volume.
 
 ```dart
 await VolumeController.instance.setMute(bool mute);
-await VolumeController.instance.setMute(true, showSystemUI: false);
 ```

@@ -232,8 +232,8 @@ namespace volume_controller
                 std::cerr << "Failed to register volume notification: " << hr << std::endl;
                 // Keep pCallback_. It belongs to the Dart EventChannel
                 // subscription, not this endpoint. Releasing it here would
-                // leave volumeChanges silent until the Dart listener is torn
-                // down and attached again. A later rebind can register it.
+                // leave the Dart listener silent until it is torn down and
+                // attached again. A later rebind can register it.
             }
         }
 

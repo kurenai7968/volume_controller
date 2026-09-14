@@ -30,7 +30,7 @@ Minimal and matter-of-fact. Labels name the plugin method. Never cute, never emo
 
 - Do not add BLoC, go_router, or l10n. A plugin example should show `VolumeController` in a few files.
 - Mute and volume are shown separately so desktop/Android mute-at-70% is visible.
-- `volumeChanges` is the live listener; `getVolume` / `isMuted` are explicit "Read now" actions.
+- `addListener` is the live listener; `getVolume` / `isMuted` are explicit "Read now" actions.
 - `showSystemUI` only on Android and iOS. The example defaults it off so dragging the slider does not cover the demo with the system HUD.
 - Commit volume on slider release (`onChangeEnd`), not on every tick. Keep a Material `Slider` (not adaptive) so the thumb stays a 48dp target on iOS.
 - AppBar titles stay start-aligned so they do not collide with the theme toggle. Title text scale is clamped to 1.4.
