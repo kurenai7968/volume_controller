@@ -7,8 +7,8 @@ Control and observe the system volume on Android, iOS, macOS, Windows, and Linux
 
 ## Requirements
 
-- Flutter `>=3.38.0`
-- Dart `^3.10.0`
+- Flutter `>=3.44.0`
+- Dart `^3.12.0`
 
 The iOS plugin uses the scene lifecycle APIs introduced for Flutter plugins in Flutter 3.38.
 
@@ -26,7 +26,11 @@ The iOS plugin uses the scene lifecycle APIs introduced for Flutter plugins in F
 
 - iOS volume control must be tested on a real device. The simulator does not support system volume control.
 - `showSystemUI` is supported on Android and iOS only.
-- On Android and iOS, `isMuted()` treats volume `0` as muted, and `setMute(false)` restores the previous volume saved by the plugin.
+- Mute is not volume `0` on every platform:
+  - **Windows, macOS, Linux:** system mute. Volume can stay non-zero while muted.
+  - **Android API 23+:** `STREAM_MUSIC` mute (`isStreamMute` / `ADJUST_MUTE`).
+  - **Android API 21–22:** mute sets volume to `0` and unmute restores the previous volume saved by the plugin.
+  - **iOS:** there is no public system media mute API. `isMuted()` is `volume == 0`. `setMute(true)` sets volume to `0`; `setMute(false)` restores the previous volume saved by the plugin. iOS 26 `AVAudioSession.setOutputMuted` is not used, because it mutes this app's audio session rather than the system volume.
 
 ## Variables
 
@@ -78,7 +82,7 @@ VolumeController.instance.removeListener();
 
 ### IsMuted
 
-Check whether the system is muted. On iOS and Android, this checks whether the volume level is `0`.
+Check whether the system is muted.
 
 ```dart
 bool isMuted = await VolumeController.instance.isMuted();
@@ -86,7 +90,7 @@ bool isMuted = await VolumeController.instance.isMuted();
 
 ### SetMute
 
-Mute or unmute the system volume. On iOS and Android, this sets the volume level to `0` and restores the previous volume level when unmuted.
+Mute or unmute the system volume.
 
 ```dart
 await VolumeController.instance.setMute(bool mute);

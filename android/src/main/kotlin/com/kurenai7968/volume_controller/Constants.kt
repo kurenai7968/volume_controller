@@ -1,6 +1,7 @@
 package com.kurenai7968.volume_controller
 
 internal const val VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION"
+internal const val EXTRA_VOLUME_STREAM_TYPE = "android.media.EXTRA_VOLUME_STREAM_TYPE"
 
 object ChannelName {
     const val METHOD_CHANNEL = "com.kurenai7968.volume_controller.method"

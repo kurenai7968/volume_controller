@@ -1,4 +1,3 @@
-import AVFoundation
 import CoreAudio
 import FlutterMacOS
 
@@ -6,20 +5,19 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
   private var eventSink: FlutterEventSink?
   private var defaultDeviceID: AudioObjectID?
   private var isObserving = false
+  private var observedAddresses: [AudioObjectPropertyAddress] = []
 
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
     -> FlutterError?
   {
-    let args = arguments as! [String: Any]
-    let fetchInitialVolume = args[EventArgument.fetchInitialVolume] as! Bool
+    let args = arguments as? [String: Any]
+    let fetchInitialVolume = args?[EventArgument.fetchInitialVolume] as? Bool ?? false
 
     self.eventSink = events
     startObservingVolumeChanges()
 
     if fetchInitialVolume {
-      let volume = AudioHelper.getVolume()
-
-      emit(volume, with: events)
+      emit(AudioHelper.getVolume(), with: events)
     }
 
     return nil
@@ -31,64 +29,91 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
     return nil
   }
 
-  private let volumeChangeListener: AudioObjectPropertyListenerProc = {
-    (inObjectID, inNumberAddresses, inAddresses, inClientData) in
-    guard let inClientData = inClientData else {
+  private let propertyListener: AudioObjectPropertyListenerProc = {
+    (_, _, _, inClientData) in
+    guard let inClientData else {
       return noErr
     }
     let listener = Unmanaged<VolumeListener>.fromOpaque(inClientData).takeUnretainedValue()
-    listener.notifyVolumeChange()
+    listener.handlePropertyChange()
     return noErr
   }
 
   private func startObservingVolumeChanges() {
     guard !isObserving else { return }
 
+    addListener(
+      objectID: AudioObjectID(kAudioObjectSystemObject),
+      address: AudioHelper.defaultOutputDeviceAddress())
+
+    observeCurrentOutputDevice()
+    isObserving = true
+  }
+
+  private func stopObservingVolumeChanges() {
+    guard isObserving else { return }
+
+    removeListener(
+      objectID: AudioObjectID(kAudioObjectSystemObject),
+      address: AudioHelper.defaultOutputDeviceAddress())
+    removeCurrentOutputDeviceListeners()
+    isObserving = false
+  }
+
+  private func handlePropertyChange() {
+    let currentDeviceID = AudioHelper.getDefaultOutputDeviceID()
+    if currentDeviceID != defaultDeviceID {
+      removeCurrentOutputDeviceListeners()
+      observeCurrentOutputDevice()
+    }
+    notifyVolumeChange()
+  }
+
+  private func observeCurrentOutputDevice() {
     defaultDeviceID = AudioHelper.getDefaultOutputDeviceID()
     guard let deviceID = defaultDeviceID else {
       print("Could not get default output device ID")
       return
     }
 
-    var address = AudioObjectPropertyAddress(
-      mSelector: kAudioDevicePropertyVolumeScalar,
-      mScope: kAudioDevicePropertyScopeOutput,
-      mElement: kAudioObjectPropertyElementMain
-    )
-
-    let status = AudioObjectAddPropertyListener(
-      deviceID, &address, volumeChangeListener, Unmanaged.passUnretained(self).toOpaque())
-
-    if status == noErr {
-      isObserving = true
-    } else {
-      print("Error adding volume property listener: \(status)")
+    let addresses =
+      AudioHelper.volumePropertyAddresses(deviceID: deviceID)
+      + AudioHelper.mutePropertyAddresses(deviceID: deviceID)
+    for address in addresses {
+      addListener(objectID: deviceID, address: address)
+      observedAddresses.append(address)
     }
   }
 
-  private func stopObservingVolumeChanges() {
-    guard isObserving, let deviceID = defaultDeviceID else { return }
+  private func removeCurrentOutputDeviceListeners() {
+    guard let deviceID = defaultDeviceID else { return }
+    for address in observedAddresses {
+      removeListener(objectID: deviceID, address: address)
+    }
+    observedAddresses.removeAll()
+    defaultDeviceID = nil
+  }
 
-    var address = AudioObjectPropertyAddress(
-      mSelector: kAudioDevicePropertyVolumeScalar,
-      mScope: kAudioDevicePropertyScopeOutput,
-      mElement: kAudioObjectPropertyElementMain
-    )
+  private func addListener(objectID: AudioObjectID, address: AudioObjectPropertyAddress) {
+    var mutableAddress = address
+    let status = AudioObjectAddPropertyListener(
+      objectID, &mutableAddress, propertyListener, Unmanaged.passUnretained(self).toOpaque())
+    if status != noErr {
+      print("Error adding audio property listener: \(status)")
+    }
+  }
 
+  private func removeListener(objectID: AudioObjectID, address: AudioObjectPropertyAddress) {
+    var mutableAddress = address
     let status = AudioObjectRemovePropertyListener(
-      deviceID, &address, volumeChangeListener, Unmanaged.passUnretained(self).toOpaque())
-
-    if status == noErr {
-      isObserving = false
-    } else {
-      print("Error removing volume property listener: \(status)")
+      objectID, &mutableAddress, propertyListener, Unmanaged.passUnretained(self).toOpaque())
+    if status != noErr {
+      print("Error removing audio property listener: \(status)")
     }
   }
 
   private func notifyVolumeChange() {
-    let volume = AudioHelper.getVolume()
-
-    emit(volume)
+    emit(AudioHelper.getVolume())
   }
 
   private func emit(_ volume: Float, with sink: FlutterEventSink? = nil) {

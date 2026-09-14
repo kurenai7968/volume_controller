@@ -4,15 +4,20 @@ import FlutterMacOS
 public class VolumeControllerPlugin: NSObject, FlutterPlugin {
   private let volumeController = VolumeController()
 
+  private func invalidArgumentsResult() -> FlutterError {
+    FlutterError(
+      code: "invalid_arguments",
+      message: "Missing or invalid method arguments.",
+      details: nil)
+  }
+
   public static func register(with registrar: FlutterPluginRegistrar) {
-    // Method Channel
     let methodChannel = FlutterMethodChannel(
       name: ChannelName.methodChannel, binaryMessenger: registrar.messenger)
     let instance = VolumeControllerPlugin()
     registrar.addMethodCallDelegate(instance, channel: methodChannel)
 
-    // Volume Listener Event Channel
-    let eventChannel: FlutterEventChannel = FlutterEventChannel(
+    let eventChannel = FlutterEventChannel(
       name: ChannelName.eventChannel, binaryMessenger: registrar.messenger)
     eventChannel.setStreamHandler(VolumeListener())
   }
@@ -20,22 +25,26 @@ public class VolumeControllerPlugin: NSObject, FlutterPlugin {
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case MethodName.getVolume:
-      let volume = volumeController.getVolume()
-      result(volume)
+      result(volumeController.getVolume())
     case MethodName.setVolume:
       let arg = call.arguments as? [String: Any]
-      let volume = arg?[MethodArgument.volume] as? Double
+      guard let volume = arg?[MethodArgument.volume] as? Double else {
+        result(invalidArgumentsResult())
+        return
+      }
 
-      volumeController.setVolume(volume: Float(volume!))
+      volumeController.setVolume(volume: Float(volume))
       result(nil)
     case MethodName.isMuted:
-      let isMuted = volumeController.isMuted()
-      result(isMuted)
+      result(volumeController.isMuted())
     case MethodName.setMute:
       let arg = call.arguments as? [String: Any]
-      let isMute = arg?[MethodArgument.isMute] as? Bool
+      guard let isMute = arg?[MethodArgument.isMute] as? Bool else {
+        result(invalidArgumentsResult())
+        return
+      }
 
-      volumeController.setMute(isMute: isMute!)
+      volumeController.setMute(isMute: isMute)
       result(nil)
     default:
       result(FlutterMethodNotImplemented)

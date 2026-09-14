@@ -1,11 +1,12 @@
 name: volume_controller_example
 version: 0.0.1+1
-description: Demonstrates how to use the volume_controller plugin.
+description: Example app for the volume_controller plugin.
 
 publish_to: "none"
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
