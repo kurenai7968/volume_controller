@@ -2,6 +2,19 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <vector>
+#include <poll.h>
+
+namespace
+{
+    const char *kPlaybackElements[] = {
+        "Master",
+        "PCM",
+        "Speaker",
+        "Headphone",
+        "SoftMaster",
+    };
+}
 
 AudioController::AudioController()
     : cardName_("default")
@@ -58,16 +71,33 @@ void AudioController::open_mixer()
         throw std::runtime_error("Failed to load mixer controls");
     }
 
-    snd_mixer_elem_t *elem = get_mixer_element("Master");
-    if (elem)
+    master_element_ = find_playback_element();
+    if (!master_element_)
     {
-        master_element_ = elem;
+        snd_mixer_close(mixerHandle_);
+        mixerHandle_ = nullptr;
+        throw std::runtime_error("No playback mixer element found");
     }
-    else
+}
+
+snd_mixer_elem_t *AudioController::find_playback_element()
+{
+    for (const char *name : kPlaybackElements)
     {
-        std::cerr << "Failed to find master mixer element." << std::endl;
-        throw std::runtime_error("Master mixer element not found");
+        try
+        {
+            snd_mixer_elem_t *elem = get_mixer_element(name);
+            if (elem && snd_mixer_selem_has_playback_volume(elem))
+            {
+                return elem;
+            }
+        }
+        catch (const std::exception &)
+        {
+            continue;
+        }
     }
+    return nullptr;
 }
 
 snd_mixer_elem_t *AudioController::get_mixer_element(const std::string &channel) const
@@ -95,7 +125,6 @@ double AudioController::get_volume()
         throw std::runtime_error("Mixer or master element not initialized for get_volume");
     }
 
-    // Handle events to ensure we have the latest state
     snd_mixer_handle_events(mixerHandle_);
 
     long min, max;
@@ -106,7 +135,7 @@ double AudioController::get_volume()
     long volume;
     if (snd_mixer_selem_get_playback_volume(master_element_, SND_MIXER_SCHN_FRONT_LEFT, &volume))
     {
-        throw std::runtime_error("Failed to get volume for Master channel");
+        throw std::runtime_error("Failed to get volume for playback channel");
     }
 
     return (double)(volume - min) / (max - min);
@@ -114,45 +143,49 @@ double AudioController::get_volume()
 
 void AudioController::set_volume(double volume_percent)
 {
-    double volume_decimal = volume_percent;
-
-    if (!master_element_ && !mixerHandle_)
+    if (!master_element_)
     {
         throw std::runtime_error("Mixer or master element not initialized for set_volume");
     }
-    snd_mixer_elem_t *elem_to_use = master_element_;
-    if (!elem_to_use)
+
+    double volume_decimal = volume_percent;
+    if (volume_decimal < 0.0)
+        volume_decimal = 0.0;
+    if (volume_decimal > 1.0)
+        volume_decimal = 1.0;
+
+    if (volume_decimal != 0.0)
     {
-        throw std::runtime_error("Failed to get Master element for set_volume");
+        temp_mute_volume_ = -1.0;
     }
 
     long min, max;
-    snd_mixer_selem_get_playback_volume_range(elem_to_use, &min, &max);
+    snd_mixer_selem_get_playback_volume_range(master_element_, &min, &max);
 
     long rawVolume = min + (long)((max - min) * volume_decimal);
 
-    if (snd_mixer_selem_set_playback_volume_all(elem_to_use, rawVolume))
+    if (snd_mixer_selem_set_playback_volume_all(master_element_, rawVolume))
     {
-        throw std::runtime_error("Failed to set volume for Master channel");
+        throw std::runtime_error("Failed to set volume for playback channel");
     }
 }
 
 bool AudioController::is_muted()
 {
-    if (!master_element_ && !mixerHandle_)
+    if (!master_element_)
     {
         throw std::runtime_error("Mixer or master element not initialized for is_muted");
     }
-    snd_mixer_elem_t *elem_to_use = master_element_;
-    if (!elem_to_use)
+
+    if (!snd_mixer_selem_has_playback_switch(master_element_))
     {
-        throw std::runtime_error("Failed to get Master element for is_muted");
+        return get_volume() == 0.0;
     }
 
     int mute_state;
-    if (snd_mixer_selem_get_playback_switch(elem_to_use, SND_MIXER_SCHN_FRONT_LEFT, &mute_state))
+    if (snd_mixer_selem_get_playback_switch(master_element_, SND_MIXER_SCHN_FRONT_LEFT, &mute_state))
     {
-        throw std::runtime_error("Failed to get mute state for Master channel");
+        throw std::runtime_error("Failed to get mute state for playback channel");
     }
 
     return mute_state == 0;
@@ -160,19 +193,29 @@ bool AudioController::is_muted()
 
 void AudioController::set_mute(bool mute)
 {
-    if (!master_element_ && !mixerHandle_)
+    if (!master_element_)
     {
         throw std::runtime_error("Mixer or master element not initialized for set_mute");
     }
-    snd_mixer_elem_t *elem_to_use = master_element_;
-    if (!elem_to_use)
+
+    if (!snd_mixer_selem_has_playback_switch(master_element_))
     {
-        throw std::runtime_error("Failed to get Master element for set_mute");
+        if (mute)
+        {
+            temp_mute_volume_ = get_volume();
+            set_volume(0.0);
+        }
+        else if (temp_mute_volume_ >= 0.0)
+        {
+            set_volume(temp_mute_volume_);
+            temp_mute_volume_ = -1.0;
+        }
+        return;
     }
 
-    if (snd_mixer_selem_set_playback_switch_all(elem_to_use, mute ? 0 : 1))
+    if (snd_mixer_selem_set_playback_switch_all(master_element_, mute ? 0 : 1))
     {
-        throw std::runtime_error("Failed to set mute state for Master channel");
+        throw std::runtime_error("Failed to set mute state for playback channel");
     }
 }
 
@@ -201,46 +244,60 @@ gpointer AudioController::volume_listener_thread_func_static(gpointer data)
 
 void AudioController::volume_listener_loop()
 {
-    bool fetch_initial_volume = this->fetch_initial_volume;
-    bool check_volume_and_notify_called = false;
-    double initial_volume = get_volume();
-
-    if (fetch_initial_volume)
+    last_known_volume_ = get_volume();
+    if (fetch_initial_volume && volume_change_callback_)
     {
-        check_volume_and_notify_called = true;
+        volume_change_callback_(last_known_volume_, callback_user_data_);
     }
 
-    while (listening_for_volume_changes_)
+    int descriptor_count = snd_mixer_poll_descriptors_count(mixerHandle_);
+    std::vector<struct pollfd> poll_fds;
+    if (descriptor_count > 0)
     {
-        if (!listening_for_volume_changes_)
-        {
-            break;
-        }
+        poll_fds.resize(static_cast<size_t>(descriptor_count));
+    }
 
-        if (check_volume_and_notify_called)
+    while (listening_for_volume_changes_.load())
+    {
+        if (descriptor_count > 0)
+        {
+            if (snd_mixer_poll_descriptors(mixerHandle_, poll_fds.data(), descriptor_count) < 0)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+
+            int ready = poll(poll_fds.data(), static_cast<nfds_t>(descriptor_count), 200);
+            if (ready > 0)
+            {
+                unsigned short revents = 0;
+                snd_mixer_poll_descriptors_revents(
+                    mixerHandle_, poll_fds.data(), descriptor_count, &revents);
+                if (revents & (POLLIN | POLLERR | POLLNVAL))
+                {
+                    snd_mixer_handle_events(mixerHandle_);
+                    check_volume_and_notify();
+                }
+            }
+        }
+        else
         {
             check_volume_and_notify();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        else if (initial_volume != get_volume())
-        {
-            check_volume_and_notify_called = true;
-            check_volume_and_notify();
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
 bool AudioController::start_listening_for_volume_changes(VolumeChangeCallback callback, gpointer user_data)
 {
-    if (listening_for_volume_changes_)
+    if (listening_for_volume_changes_.load())
     {
         return true;
     }
 
     volume_change_callback_ = callback;
     callback_user_data_ = user_data;
-    listening_for_volume_changes_ = true;
+    listening_for_volume_changes_.store(true);
 
     GError *error = nullptr;
     volume_listener_thread_ = g_thread_try_new("volume-listener", volume_listener_thread_func_static, this, &error);
@@ -249,7 +306,7 @@ bool AudioController::start_listening_for_volume_changes(VolumeChangeCallback ca
         std::cerr << "Failed to create volume listener thread: " << (error ? error->message : "Unknown error") << std::endl;
         if (error)
             g_error_free(error);
-        listening_for_volume_changes_ = false;
+        listening_for_volume_changes_.store(false);
         return false;
     }
 
@@ -258,12 +315,12 @@ bool AudioController::start_listening_for_volume_changes(VolumeChangeCallback ca
 
 void AudioController::stop_listening_for_volume_changes()
 {
-    if (!listening_for_volume_changes_)
+    if (!listening_for_volume_changes_.load())
     {
         return;
     }
 
-    listening_for_volume_changes_ = false;
+    listening_for_volume_changes_.store(false);
 
     if (volume_listener_thread_)
     {

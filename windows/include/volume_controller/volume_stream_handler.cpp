@@ -27,8 +27,17 @@ namespace volume_stream_handler
         const flutter::EncodableValue *arguments,
         std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> &&events)
     {
-        const flutter::EncodableMap *args_map = std::get_if<flutter::EncodableMap>(arguments);
-        const bool *fetchInitialVolume = std::get_if<bool>(GetArgValue(*args_map, constants::EventArgument::fetchInitialVolume));
+        bool fetch_initial_volume = false;
+        if (arguments)
+        {
+            if (const auto *args_map = std::get_if<flutter::EncodableMap>(arguments))
+            {
+                if (const bool *fetchInitialVolume = std::get_if<bool>(GetArgValue(*args_map, constants::EventArgument::fetchInitialVolume)))
+                {
+                    fetch_initial_volume = *fetchInitialVolume;
+                }
+            }
+        }
 
         // EventChannel handlers run on the Flutter platform thread. Create the
         // message-only window here so its WndProc also runs on that thread.
@@ -41,7 +50,7 @@ namespace volume_stream_handler
 
         volume_listener_.RegisterVolumeNotification(callback);
 
-        if (fetchInitialVolume && *fetchInitialVolume)
+        if (fetch_initial_volume)
         {
             float volume = volume_controller::VolumeController::GetInstance().GetVolume();
             event_sink_->Success(flutter::EncodableValue(volume));

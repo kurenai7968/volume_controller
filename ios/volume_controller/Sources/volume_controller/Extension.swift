@@ -12,28 +12,14 @@ extension AVAudioSession {
     return outputVolume
   }
 
-  func activateAudioSession() {
-    do {
-      try setAudioSessionCategory()
-      try setActive(true)
-    } catch {
-      print("Error activating audio session: \(error)")
-    }
-  }
-
-  func deactivateAudioSession() {
-    do {
-      try setActive(false, options: .notifyOthersOnDeactivation)
-    } catch {
-      print("Error deactivating audio session: \(error)")
-    }
-  }
-
-  func setAudioSessionCategory() {
+  /// Activates the session for outputVolume KVO without taking exclusive audio focus.
+  /// Does not deactivate on listener cancel so a host app's session is left intact.
+  func prepareForVolumeObservation() {
     do {
       try setCategory(.playback, options: [.mixWithOthers])
+      try setActive(true)
     } catch {
-      print("Error setting audio session category: \(error)")
+      print("Error preparing audio session for volume observation: \(error)")
     }
   }
 }

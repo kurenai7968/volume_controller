@@ -1,3 +1,17 @@
+## 3.7.0
+
+* Android: Mute `STREAM_MUSIC` with `isStreamMute` / `ADJUST_MUTE` on API 23+
+* Android: Observe music volume via `ContentObserver` and ignore other stream broadcasts
+* iOS: Retry `MPVolumeView` writes on the main queue and report failure if the slider is missing
+* iOS: Stop deactivating the shared audio session when the volume listener is cancelled
+* Dart: Document mute semantics, add `volumeChanges`, and allow per-call `showSystemUI`
+* Dart: Treat a null `isMuted` result as unmuted instead of throwing
+* macOS: Avoid force-unwraps; fall back to per-channel volume/mute; follow default-output changes
+* Windows: Share COM/device lifetime, rebind on default-device change, and reject invalid arguments
+* Linux: Fall back across mixer elements, poll ALSA descriptors, and reject invalid arguments
+* Refresh the example app to show mute separately from volume, `volumeChanges`, and platform HUD
+* Android: Build with Gradle 9.3.1 and AGP 9.1.0 so JDK 25 can assemble the example
+
 ## 3.6.1
 
 * Windows: Release the volume callback when notification registration fails because no audio endpoint is available

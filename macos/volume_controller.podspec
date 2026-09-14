@@ -4,24 +4,17 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'volume_controller'
-  s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.version          = '3.7.0'
+  s.summary          = 'A Flutter plugin to control and observe system volume.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+A Flutter plugin to control and observe system volume on Android, iOS, macOS, Windows, and Linux.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/kurenai7968/volume_controller'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'kurenai7968' => 'email@example.com' }
 
   s.source           = { :path => '.' }
   s.source_files = 'volume_controller/Sources/volume_controller/**/*'
-
-  # If your plugin requires a privacy manifest, for example if it collects user
-  # data, update the PrivacyInfo.xcprivacy file to describe your plugin's
-  # privacy impact, and then uncomment this line. For more information,
-  # see https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
-  # s.resource_bundles = {'volume_controller_privacy' => ['volume_controller/Sources/volume_controller/PrivacyInfo.xcprivacy']}
-
   s.dependency 'FlutterMacOS'
 
   s.platform = :osx, '10.11'

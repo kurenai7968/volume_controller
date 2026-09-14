@@ -13,6 +13,49 @@
   (G_TYPE_CHECK_INSTANCE_CAST((obj), volume_controller_plugin_get_type(), \
                               VolumeControllerPlugin))
 
+static bool get_double_arg(FlValue *args, const char *key, double *out)
+{
+  if (!args || !out || fl_value_get_type(args) != FL_VALUE_TYPE_MAP)
+  {
+    return false;
+  }
+
+  FlValue *arg = fl_value_lookup_string(args, key);
+  if (!arg)
+  {
+    return false;
+  }
+
+  if (fl_value_get_type(arg) == FL_VALUE_TYPE_FLOAT)
+  {
+    *out = fl_value_get_float(arg);
+    return true;
+  }
+  if (fl_value_get_type(arg) == FL_VALUE_TYPE_INT)
+  {
+    *out = static_cast<double>(fl_value_get_int(arg));
+    return true;
+  }
+  return false;
+}
+
+static bool get_bool_arg(FlValue *args, const char *key, bool *out)
+{
+  if (!args || !out || fl_value_get_type(args) != FL_VALUE_TYPE_MAP)
+  {
+    return false;
+  }
+
+  FlValue *arg = fl_value_lookup_string(args, key);
+  if (!arg || fl_value_get_type(arg) != FL_VALUE_TYPE_BOOL)
+  {
+    return false;
+  }
+
+  *out = fl_value_get_bool(arg);
+  return true;
+}
+
 struct _VolumeControllerPlugin
 {
   GObject parent_instance;
@@ -44,16 +87,25 @@ static void volume_controller_plugin_handle_method_call(
   const gchar *method = fl_method_call_get_name(method_call);
   FlValue *args = fl_method_call_get_args(method_call);
 
-  if (strcmp(method, MethodName::getVolume) == 0)
+  if (!self->audioController)
+  {
+    response = FL_METHOD_RESPONSE(fl_method_error_response_new("PluginError", "AudioController not initialized.", nullptr));
+  }
+  else if (strcmp(method, MethodName::getVolume) == 0)
   {
     response = get_volume(self->audioController);
   }
   else if (strcmp(method, MethodName::setVolume) == 0)
   {
-    FlValue *arg = fl_value_lookup_string(args, MethodArgument::volume);
-    double volume = fl_value_get_float(arg);
-
-    response = set_volume(self->audioController, volume);
+    double volume = 0;
+    if (!get_double_arg(args, MethodArgument::volume, &volume))
+    {
+      response = FL_METHOD_RESPONSE(fl_method_error_response_new("InvalidArguments", "Volume argument is missing", nullptr));
+    }
+    else
+    {
+      response = set_volume(self->audioController, volume);
+    }
   }
   else if (strcmp(method, MethodName::isMuted) == 0)
   {
@@ -61,9 +113,15 @@ static void volume_controller_plugin_handle_method_call(
   }
   else if (strcmp(method, MethodName::setMute) == 0)
   {
-    FlValue *arg = fl_value_lookup_string(args, MethodArgument::isMute);
-    bool mute = fl_value_get_bool(arg);
-    response = set_mute(self->audioController, mute);
+    bool mute = false;
+    if (!get_bool_arg(args, MethodArgument::isMute, &mute))
+    {
+      response = FL_METHOD_RESPONSE(fl_method_error_response_new("InvalidArguments", "isMute argument is missing", nullptr));
+    }
+    else
+    {
+      response = set_mute(self->audioController, mute);
+    }
   }
   else
   {

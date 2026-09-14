@@ -66,6 +66,12 @@ namespace volume_controller
     else if (method_name == constants::MethodName::setVolume)
     {
       const auto *arguments = std::get_if<flutter::EncodableMap>(method_call.arguments());
+      if (!arguments)
+      {
+        result->Error("InvalidArguments", "Volume argument is missing");
+        return;
+      }
+
       const double *volume = std::get_if<double>(GetArgValue(*arguments, constants::MethodArgument::volume));
 
       if (!volume)
@@ -91,6 +97,12 @@ namespace volume_controller
     else if (method_call.method_name().compare(constants::MethodName::setMute) == 0)
     {
       const auto *arguments = std::get_if<flutter::EncodableMap>(method_call.arguments());
+      if (!arguments)
+      {
+        result->Error("InvalidArguments", "isMute argument is missing");
+        return;
+      }
+
       const bool *isMute = std::get_if<bool>(GetArgValue(*arguments, constants::MethodArgument::isMute));
 
       if (!isMute)
