@@ -187,6 +187,49 @@ void main() {
     expect(second, [0.8]);
   });
 
+  test('unawaited removeListener does not drop a same-turn addListener',
+      () async {
+    var listens = 0;
+    var cancels = 0;
+    late MockStreamHandlerEventSink sink;
+    messenger.setMockStreamHandler(
+      eventChannel,
+      MockStreamHandler.inline(
+        onListen: (arguments, events) {
+          listens++;
+          sink = events;
+        },
+        onCancel: (arguments) {
+          cancels++;
+        },
+      ),
+    );
+
+    VolumeController.instance.addListener((_) {}, fetchInitialVolume: false);
+    await pumpEventQueue();
+
+    final volumes = <double>[];
+    final pendingRemove = VolumeController.instance.removeListener();
+    VolumeController.instance.addListener(
+      volumes.add,
+      fetchInitialVolume: false,
+    );
+    await pendingRemove;
+    await pumpEventQueue();
+
+    sink.success(0.42);
+    await pumpEventQueue();
+    expect(volumes, [0.42]);
+
+    await VolumeController.instance.removeListener();
+    await pumpEventQueue();
+    expect(listens - cancels, 0);
+
+    VolumeController.instance.addListener((_) {}, fetchInitialVolume: false);
+    await pumpEventQueue();
+    expect(listens - cancels, 1);
+  });
+
   test('addListener replaces the callback without restarting the stream',
       () async {
     var listens = 0;

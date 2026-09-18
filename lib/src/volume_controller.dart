@@ -59,7 +59,18 @@ class VolumeController {
 
   /// Cancels the volume listener.
   Future<void> removeListener() async {
-    await _volumeListener?.cancel();
+    final listener = _volumeListener;
+    if (listener == null) {
+      return;
+    }
+
+    await listener.cancel();
+
+    // addListener may have replaced this subscription during the await.
+    if (!identical(_volumeListener, listener)) {
+      return;
+    }
+
     _volumeListener = null;
     _volumeStream = null;
   }
