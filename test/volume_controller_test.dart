@@ -32,10 +32,10 @@ void main() {
     });
   });
 
-  tearDown(() {
+  tearDown(() async {
+    await VolumeController.instance.removeListener();
     messenger.setMockMethodCallHandler(methodChannel, null);
     messenger.setMockStreamHandler(eventChannel, null);
-    VolumeController.instance.removeListener();
     VolumeController.instance.showSystemUI = true;
   });
 
@@ -95,7 +95,7 @@ void main() {
     );
     await pumpEventQueue();
     await subscription.cancel();
-    VolumeController.instance.removeListener();
+    await VolumeController.instance.removeListener();
 
     expect(volumes, [0.4]);
     expect(listenArgs, {EventArgument.fetchInitialVolume: true});
@@ -144,5 +144,131 @@ void main() {
     await subscription.cancel();
 
     expect(volumes, [0.55]);
+  });
+
+  test('removeListener can be awaited before listening again', () async {
+    final trace = <String>[];
+    late MockStreamHandlerEventSink sink;
+    messenger.setMockStreamHandler(
+      eventChannel,
+      MockStreamHandler.inline(
+        onListen: (arguments, events) {
+          trace.add('listen');
+          sink = events;
+        },
+        onCancel: (arguments) {
+          trace.add('cancel');
+        },
+      ),
+    );
+
+    final first = <double>[];
+    VolumeController.instance.addListener(
+      first.add,
+      fetchInitialVolume: false,
+    );
+    await pumpEventQueue();
+    sink.success(0.2);
+    await pumpEventQueue();
+
+    await VolumeController.instance.removeListener();
+
+    final second = <double>[];
+    VolumeController.instance.addListener(
+      second.add,
+      fetchInitialVolume: false,
+    );
+    await pumpEventQueue();
+    sink.success(0.8);
+    await pumpEventQueue();
+
+    expect(trace, ['listen', 'cancel', 'listen']);
+    expect(first, [0.2]);
+    expect(second, [0.8]);
+  });
+
+  test('unawaited removeListener does not drop a same-turn addListener',
+      () async {
+    var listens = 0;
+    var cancels = 0;
+    late MockStreamHandlerEventSink sink;
+    messenger.setMockStreamHandler(
+      eventChannel,
+      MockStreamHandler.inline(
+        onListen: (arguments, events) {
+          listens++;
+          sink = events;
+        },
+        onCancel: (arguments) {
+          cancels++;
+        },
+      ),
+    );
+
+    VolumeController.instance.addListener((_) {}, fetchInitialVolume: false);
+    await pumpEventQueue();
+
+    final volumes = <double>[];
+    final pendingRemove = VolumeController.instance.removeListener();
+    VolumeController.instance.addListener(
+      volumes.add,
+      fetchInitialVolume: false,
+    );
+    await pendingRemove;
+    await pumpEventQueue();
+
+    sink.success(0.42);
+    await pumpEventQueue();
+    expect(volumes, [0.42]);
+
+    await VolumeController.instance.removeListener();
+    await pumpEventQueue();
+    expect(listens - cancels, 0);
+
+    VolumeController.instance.addListener((_) {}, fetchInitialVolume: false);
+    await pumpEventQueue();
+    expect(listens - cancels, 1);
+  });
+
+  test('addListener replaces the callback without restarting the stream',
+      () async {
+    var listens = 0;
+    var cancels = 0;
+    late MockStreamHandlerEventSink sink;
+    messenger.setMockStreamHandler(
+      eventChannel,
+      MockStreamHandler.inline(
+        onListen: (arguments, events) {
+          listens++;
+          sink = events;
+        },
+        onCancel: (arguments) {
+          cancels++;
+        },
+      ),
+    );
+
+    final first = <double>[];
+    VolumeController.instance.addListener(
+      first.add,
+      fetchInitialVolume: false,
+    );
+    await pumpEventQueue();
+    sink.success(0.1);
+    await pumpEventQueue();
+
+    final second = <double>[];
+    VolumeController.instance.addListener(
+      second.add,
+      fetchInitialVolume: false,
+    );
+    await pumpEventQueue();
+    sink.success(0.2);
+    await pumpEventQueue();
+
+    expect(first, [0.1]);
+    expect(second, [0.2]);
+    expect(listens, 1);
+    expect(cancels, 0);
   });
 }

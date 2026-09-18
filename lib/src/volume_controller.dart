@@ -5,16 +5,9 @@ import 'package:volume_controller/src/constants.dart';
 
 /// Provides access to the system volume.
 ///
-/// Mute is not the same on every platform:
-/// - Windows, macOS, and Linux use the system mute switch, so volume can stay
-///   non-zero while muted.
-/// - Android (API 23+) mutes `STREAM_MUSIC` the same way. Older Android
-///   versions simulate mute by setting the volume to `0` and restoring the
-///   previous level on unmute.
-/// - iOS has no public system media mute API. [isMuted] is `volume == 0`, and
-///   [setMute] sets the volume to `0` or restores the previous level saved by
-///   this plugin. iOS 26 `AVAudioSession.setOutputMuted` is not used; it would
-///   mute this app's session, not Music or the system volume slider.
+/// Mute is a system switch on Windows, macOS, Linux, and Android API 23+.
+/// On iOS and older Android, mute is volume `0`, and unmute restores the
+/// previous level saved by this plugin.
 class VolumeController {
   /// Singleton instance of VolumeController
   static final VolumeController _instance = VolumeController._();
@@ -32,8 +25,8 @@ class VolumeController {
     ChannelName.eventChannel,
   );
 
-  /// Volume listener subscription
   StreamSubscription<double>? _volumeListener;
+  Stream<double>? _volumeStream;
 
   /// Whether to show the system UI when changing the volume.
   ///
@@ -43,46 +36,53 @@ class VolumeController {
   /// Private constructor for singleton
   VolumeController._();
 
-  /// Adds a listener for volume changes.
+  /// Listens for system volume changes.
   ///
-  /// This method listens to the system volume. The volume value will be
-  /// generated when the volume changes. Optionally, the initial volume can be
-  /// fetched and provided to the listener immediately.
+  /// If [fetchInitialVolume] is true, the current volume is sent immediately.
   StreamSubscription<double> addListener(
     void Function(double)? onData, {
     bool fetchInitialVolume = true,
   }) {
-    removeListener();
-
-    _volumeListener = _eventChannel
+    _volumeStream ??= _eventChannel
         .receiveBroadcastStream({
           EventArgument.fetchInitialVolume: fetchInitialVolume,
         })
-        .map((event) => (event as num).toDouble())
-        .listen(onData);
+        .map((event) => (event as num).toDouble());
 
-    return _volumeListener!;
+    final previous = _volumeListener;
+    final subscription = _volumeStream!.listen(onData);
+    _volumeListener = subscription;
+    previous?.cancel();
+
+    return subscription;
   }
 
   /// Cancels the volume listener.
-  void removeListener() {
-    _volumeListener?.cancel();
+  Future<void> removeListener() async {
+    final listener = _volumeListener;
+    if (listener == null) {
+      return;
+    }
+
+    await listener.cancel();
+
+    // addListener may have replaced this subscription during the await.
+    if (!identical(_volumeListener, listener)) {
+      return;
+    }
+
     _volumeListener = null;
+    _volumeStream = null;
   }
 
-  /// Gets the current system volume.
-  ///
-  /// The value is in the range `0.0` (minimum) to `1.0` (maximum).
+  /// Current system volume, from `0.0` to `1.0`.
   Future<double> getVolume() async {
     return await _methodChannel
         .invokeMethod<double>(MethodName.getVolume)
         .then<double>((double? value) => value ?? 0);
   }
 
-  /// Sets the system volume to the specified level.
-  ///
-  /// [volume] should be a double between `0.0` (minimum) and `1.0` (maximum).
-  /// Values outside that range are clamped by the native implementations.
+  /// Sets the system volume. Values outside `0.0`–`1.0` are clamped.
   Future<void> setVolume(double volume) async {
     await _methodChannel.invokeMethod(MethodName.setVolume, {
       MethodArgument.volume: volume,
@@ -90,22 +90,14 @@ class VolumeController {
     });
   }
 
-  /// Gets the current system volume mute status.
-  ///
-  /// On Windows, macOS, Linux, and Android API 23+, this is the OS mute
-  /// switch. On iOS and older Android versions, this is `true` when the
-  /// reported volume is `0`.
+  /// Whether the system volume is muted.
   Future<bool> isMuted() async {
     return await _methodChannel
         .invokeMethod<bool>(MethodName.isMuted)
         .then<bool>((value) => value ?? false);
   }
 
-  /// Sets the system volume mute status.
-  ///
-  /// On iOS, mute sets the volume to `0` and unmute restores the previous
-  /// volume saved by this plugin. Unmute is a no-op if this plugin has not
-  /// muted since the last non-zero [setVolume].
+  /// Mutes or unmutes the system volume.
   Future<void> setMute(bool mute) async {
     await _methodChannel.invokeMethod(MethodName.setMute, {
       MethodArgument.isMute: mute,

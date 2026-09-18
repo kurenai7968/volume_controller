@@ -1,3 +1,10 @@
+## 3.7.1
+
+* Reuse the volume EventChannel stream and await `removeListener` so
+  listeners can be re-attached
+  ([#58](https://github.com/kurenai7968/volume_controller/issues/58))
+* Keep a same-turn `addListener` after an unawaited `removeListener`
+
 ## 3.7.0
 
 * Android: Mute `STREAM_MUSIC` with `isStreamMute` / `ADJUST_MUTE` on API 23+
