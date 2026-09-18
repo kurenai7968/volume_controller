@@ -64,7 +64,7 @@ await VolumeController.instance.setVolume(double volume);
 
 Add a listener to monitor system volume changes.
 
-- `fetchInitialVolume`: This parameter is optional and is used to fetch the initial volume when the listener is added. The default value is `true`.
+- `fetchInitialVolume`: Send the current volume immediately. Defaults to `true`.
 
 ```dart
 VolumeController.instance.addListener((volume) {
@@ -77,7 +77,7 @@ VolumeController.instance.addListener((volume) {
 Remove the volume listener.
 
 ```dart
-VolumeController.instance.removeListener();
+await VolumeController.instance.removeListener();
 ```
 
 ### IsMuted
